@@ -15,6 +15,11 @@ Engenharia de Software, 3º ano (turma de agosto) · Disciplina: **Operating Sys
 
 Apresentação da infraestrutura do servidor `SRV-ZELA01`: a máquina virtual, a rede (`192.168.56.10`) e o domínio Active Directory/DNS (`zelabairro.local`), a aplicação hospedada no IIS (`ZelaBairroPool` com permissões NTFS), o monitoramento de recursos (`ZelaBairro-Alertas`), a recuperação automática após falhas simuladas no `w3wp.exe` e a auditoria de logs (`Event Viewer` e IIS). As evidências detalhadas estão em [`evidencias/`](evidencias/).
 
+
+[<img width="1913" height="1069" alt="vídeo" src="https://github.com/user-attachments/assets/918090fe-4ac5-457a-bbd3-47631d5757fd" />](https://youtu.be/WDPXdF4Lmmc)
+
+- Vídeo de demonstração: [Assista ao vídeo no youtube](https://youtu.be/WDPXdF4Lmmc)
+
 ---
 
 ## 1. A CitizenTech
@@ -37,7 +42,8 @@ A aplicação hospedada é simples de propósito. Ela existe para comprovar a in
 ```
    Cliente (navegador)
           |  HTTP :80
-          vApresentação da infraestrutura do servidor `SRV-ZELA01`: a máquina virtual, a rede (`192.168.56.10`) e o domínio Active Directory/DNS (`zelabairro.local`), a aplicação hospedada no IIS (`ZelaBairroPool` com permissões NTFS), o monitoramento de recursos (`ZelaBairro-Alertas`), a recuperação automática após falhas simuladas no `w3wp.exe` e a auditoria de logs (`Event Viewer` e IIS). As evidências detalhadas estão em [`evidencias/`](evidencias/).
+          vApresentação da infraestrutura do servidor `SRV-ZELA01`: a máquina virtual, a rede (`192.168.56.10`) e o domínio Active Directory/DNS (`zelabairro.local`), a aplicação hospedada no IIS
+(`ZelaBairroPool` com permissões NTFS), o monitoramento de recursos (`ZelaBairro-Alertas`), a recuperação automática após falhas simuladas no `w3wp.exe` e a auditoria de logs (`Event Viewer` e IIS). As evidências detalhadas estão em [`evidencias/`](evidencias/).
  +--------------------------------------------------------+
  |  VM Windows Server  -  SRV-ZELA01  -  zelabairro.local |
  |                                                        |
