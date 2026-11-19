@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZelaBairro - Painel de ocorrencias (demonstracao)</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#1b1f23;font-size:18px}
+header{background:#1f3864;color:#fff;padding:20px 24px}
+header h1{margin:0;font-size:26px}
+header p{margin:6px 0 0;font-size:16px}
+main{max-width:980px;margin:24px auto;padding:0 16px}
+.aviso{background:#fff8e1;border:1px solid #f0c36d;padding:12px 16px;border-radius:8px;font-size:16px}
+.resumo{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+.card{background:#fff;border:1px solid #d9dee3;border-radius:8px;padding:12px 16px;min-width:150px}
+.card b{display:block;font-size:28px}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{padding:12px;border-bottom:1px solid #d9dee3;text-align:left}
+th{background:#e8eef7}
+.tag{display:inline-block;padding:4px 10px;border-radius:12px;font-size:15px;font-weight:bold}
+.Critica{background:#b71c1c;color:#fff}
+.Alta{background:#bf360c;color:#fff}
+.Media{background:#f9a825;color:#1b1f23}
+.Baixa{background:#2e7d32;color:#fff}
+footer{max-width:980px;margin:24px auto;padding:0 16px;font-size:14px;color:#4a5560}
+</style>
+</head>
+<body>
+<header>
+<h1>ZelaBairro - Painel de ocorrencias</h1>
+<p>Zeladoria colaborativa de Carapicuiba - SP | Hospedado no IIS (Windows Server)</p>
+</header>
+<main>
+<p class="aviso">Pagina de demonstracao para a disciplina de Sistemas Operacionais. Todos os dados abaixo sao simulados (sem dados pessoais reais).</p>
+<div class="resumo" id="resumo"></div>
+<table>
+<thead><tr><th>ID</th><th>Categoria</th><th>Bairro (simulado)</th><th>Origem</th><th>Status</th><th>Criticidade</th></tr></thead>
+<tbody id="lista"><tr><td colspan="6">Carregando...</td></tr></tbody>
+</table>
+</main>
+<footer id="rodape"></footer>
+<script>
+const ordem={"Critica":0,"Alta":1,"Media":2,"Baixa":3};
+function celula(tr,texto,classe){
+  const td=document.createElement("td");
+  if(classe){const s=document.createElement("span");s.className="tag "+classe;s.textContent=texto;td.appendChild(s);}
+  else{td.textContent=texto;}
+  tr.appendChild(td);
+}
+fetch("ocorrencias.json").then(function(r){
+  if(!r.ok){throw new Error("HTTP "+r.status);}
+  return r.json();
+}).then(function(dados){
+  dados.sort(function(a,b){return ordem[a.criticidade]-ordem[b.criticidade];});
+  const tb=document.getElementById("lista");tb.textContent="";
+  dados.forEach(function(o){
+    const tr=document.createElement("tr");
+    celula(tr,o.id);celula(tr,o.categoria);celula(tr,o.bairro);celula(tr,o.origem);celula(tr,o.status);
+    celula(tr,o.criticidade,o.criticidade);
+    tb.appendChild(tr);
+  });
+  const abertas=dados.filter(function(o){return o.status!=="Concluida";}).length;
+  const criticas=dados.filter(function(o){return o.criticidade==="Critica"||o.criticidade==="Alta";}).length;
+  document.getElementById("resumo").innerHTML=
+    '<div class="card"><b>'+dados.length+'</b>ocorrencias</div>'+
+    '<div class="card"><b>'+abertas+'</b>em aberto</div>'+
+    '<div class="card"><b>'+criticas+'</b>alta ou critica</div>';
+}).catch(function(e){
+  document.getElementById("lista").innerHTML='<tr><td colspan="6">Erro ao carregar os dados: '+e.message+'</td></tr>';
+});
+document.getElementById("rodape").textContent="Servidor: "+location.host+" | Carregado em "+new Date().toLocaleString("pt-BR");
+</script>
+</body>
+</html>

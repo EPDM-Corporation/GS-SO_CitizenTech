@@ -1,0 +1,1976 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261117112148
+Username: SRV-ZELA01\zelaadmin
+RunAs User: SRV-ZELA01\zelaadmin
+Configuration Name: 
+Machine: SRV-ZELA01 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 5444
+PSVersion: 5.1.26100.7462
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
+BuildVersion: 10.0.26100.7462
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\ZelaBairro\Evidencias\transcript-20261117-1121.txt
+PS C:\WINDOWS\system32> Get-ComputerInfo -Property WindowsProductName,WindowsVersion,OsBuildNumber | Format-List
+(Get-CimInstance Win32_Processor | Select-Object -First 1).Name
+"vCPUs logicas: $((Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors)"
+"RAM (GB): $([math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1GB,1))"
+Get-Volume -DriveLetter C | Select-Object DriveLetter, @{n='Tamanho(GB)';e={[math]::Round($_.Size/1GB,1)}}, @{n='Livre(GB)';e={[math]::Round($_.SizeRemaining/1GB,1)}}
+
+
+
+WindowsProductName : Windows Server 2025 Standard Evaluation
+WindowsVersion     : 2009
+OsBuildNumber      : 26100
+
+
+
+13th Gen Intel(R) Core(TM) i5-13420H
+vCPUs logicas: 2
+RAM (GB): 3.9
+
+DriveLetter Tamanho(GB) Livre(GB)
+----------- ----------- ---------
+          C        49.1      31.7
+
+
+PS C:\WINDOWS\system32> Get-NetAdapter | Format-Table Name, InterfaceDescription, Status
+Get-NetIPConfiguration
+
+
+Name     InterfaceDescription                 Status
+----     --------------------                 ------
+Ethernet Intel(R) PRO/1000 MT Desktop Adapter Up
+
+
+
+
+InterfaceAlias       : Ethernet
+InterfaceIndex       : 6
+InterfaceDescription : Intel(R) PRO/1000 MT Desktop Adapter
+NetProfile.Name      : Network
+IPv6Address          : fd17:625c:f037:2:c1e2:68af:5062:69af
+IPv4Address          : 10.0.2.15
+IPv6DefaultGateway   : fe80::2
+IPv4DefaultGateway   : 10.0.2.2
+DNSServer            : 192.168.100.1
+
+
+
+PS C:\WINDOWS\system32> Get-NetAdapter | Format-Table Name
+
+Name
+----
+Ethernet
+
+
+PS C:\WINDOWS\system32> $nome   = "Ethernet"       # <-- coluna Name do adaptador
+$ip     = "192.168.56.10"  # <-- o IP atual da VM (que sera fixado)
+$prefix = 24               # <-- tamanho da mascara
+$gw     = "192.168.56.1"   # <-- gateway, ou $null se nao houver
+
+Set-NetIPInterface -InterfaceAlias $nome -Dhcp Disabled
+Get-NetIPAddress -InterfaceAlias $nome -AddressFamily IPv4 | Remove-NetIPAddress -Confirm:$false
+Get-NetRoute -InterfaceAlias $nome -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object DestinationPrefix -eq '0.0.0.0/0' | Remove-NetRoute -Confirm:$false
+if ($gw) { New-NetIPAddress -InterfaceAlias $nome -IPAddress $ip -PrefixLength $prefix -DefaultGateway $gw | Out-Null }
+else     { New-NetIPAddress -InterfaceAlias $nome -IPAddress $ip -PrefixLength $prefix | Out-Null }
+Set-DnsClientServerAddress -InterfaceAlias $nome -ServerAddresses $ip
+Get-NetIPAddress : No matching MSFT_NetIPAddress objects found by CIM query for instances of the 
+ROOT/StandardCimv2/MSFT_NetIPAddress class on the  CIM server: SELECT * FROM MSFT_NetIPAddress  WHERE ((InterfaceAlias 
+LIKE 'Ethernet')) AND ((AddressFamily = 2)). Verify query parameters and retry.
+At line:7 char:1
++ Get-NetIPAddress -InterfaceAlias $nome -AddressFamily IPv4 | Remove-N ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (MSFT_NetIPAddress:String) [Get-NetIPAddress], CimJobException
+    + FullyQualifiedErrorId : CmdletizationQuery_NotFound,Get-NetIPAddress
+Get-NetIPAddress : No matching MSFT_NetIPAddress objects found by CIM query for instances of the
+ROOT/StandardCimv2/MSFT_NetIPAddress class on the  CIM server: SELECT * FROM MSFT_NetIPAddress
+WHERE ((InterfaceAlias LIKE 'Ethernet')) AND ((AddressFamily = 2)). Verify query parameters and
+retry.
+At line:7 char:1
++ Get-NetIPAddress -InterfaceAlias $nome -AddressFamily IPv4 | Remove-N ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (MSFT_NetIPAddress:String) [Get-NetIPAddress], CimJo
+   bException
+    + FullyQualifiedErrorId : CmdletizationQuery_NotFound,Get-NetIPAddress
+
+PS C:\WINDOWS\system32> Get-NetIPAddress -InterfaceAlias "Ethernet" -AddressFamily IPv4 |
+Format-Table IPAddress, PrefixLength, PrefixOrigin, AddressState
+
+IPAddress     PrefixLength PrefixOrigin AddressState
+---------     ------------ ------------ ------------
+192.168.56.10           24       Manual    Preferred
+
+
+PS C:\WINDOWS\system32> Get-NetIPConfiguration -InterfaceAlias "Ethernet" | Format-List *
+
+
+ComputerName         : SRV-ZELA01
+InterfaceAlias       : Ethernet
+InterfaceIndex       : 6
+InterfaceDescription : Intel(R) PRO/1000 MT Desktop Adapter
+CompartmentId        : 1
+NetAdapter           : MSFT_NetAdapter (CreationClassName = "MSFT_NetAdapter", DeviceID =
+                       "{A96BAE30-AC99-4D44-93DB-C5E17E9810EA}", SystemCreationClassName =
+                       "CIM_NetworkPort", SystemName = "SRV-ZELA01")
+NetCompartment       : MSFT_NetCompartment (InstanceID = ";55;")
+NetIPv6Interface     : MSFT_NetIPInterface (Name = "@55??55;", CreationClassName = "",
+                       SystemCreationClassName = "", SystemName = "")
+NetIPv4Interface     : MSFT_NetIPInterface (Name = "@55?55;", CreationClassName = "",
+                       SystemCreationClassName = "", SystemName = "")
+NetProfile           : MSFT_NetConnectionProfile (InstanceID =
+                       "{A96BAE30-AC99-4D44-93DB-C5E17E9810EA}")
+AllIPAddresses       : {192.168.56.10, fd17:625c:f037:2:c1e2:68af:5062:69af,
+                       fe80::f147:df33:c470:55a1%6}
+IPv6Address          : {fd17:625c:f037:2:c1e2:68af:5062:69af}
+IPv6TemporaryAddress : {}
+IPv6LinkLocalAddress : {fe80::f147:df33:c470:55a1%6}
+IPv4Address          : {192.168.56.10}
+IPv6DefaultGateway   : {MSFT_NetRoute (InstanceID = "DD9:55@55poB:DD?55;")}
+IPv4DefaultGateway   : {MSFT_NetRoute (InstanceID = ":8:8:8:9:55@55;C?8;@B8?@8;55;")}
+DNSServer            : {MSFT_DNSClientServerAddress (Name = "6", CreationClassName = "",
+                       SystemCreationClassName = "", SystemName = "23"),
+                       MSFT_DNSClientServerAddress (Name = "6", CreationClassName = "",
+                       SystemCreationClassName = "", SystemName = "2")}
+Detailed             : False
+
+
+
+PS C:\WINDOWS\system32> cls
+PS C:\WINDOWS\system32> Get-NetIPAddress -InterfaceAlias "Ethernet" -AddressFamily IPv4 |
+Format-List IPAddress, PrefixLength, PrefixOrigin, AddressState
+
+
+IPAddress    : 192.168.56.10
+PrefixLength : 24
+PrefixOrigin : Manual
+AddressState : Preferred
+
+
+
+PS C:\WINDOWS\system32> Get-NetRoute -InterfaceAlias "Ethernet" -AddressFamily IPv4 |
+Where-Object { $_.DestinationPrefix -eq "0.0.0.0/0" } |
+Format-Table DestinationPrefix, NextHop, RouteMetric
+
+DestinationPrefix NextHop      RouteMetric
+----------------- -------      -----------
+0.0.0.0/0         192.168.56.1         256
+
+
+PS C:\WINDOWS\system32> Get-DnsClientServerAddress -InterfaceAlias "Ethernet" -AddressFamily IPv4
+
+InterfaceAlias               Interface Address ServerAddresses
+                             Index     Family
+--------------               --------- ------- ---------------
+Ethernet                             6 IPv4    {192.168.56.10}
+
+
+PS C:\WINDOWS\system32> Get-NetIPInterface -InterfaceAlias "Ethernet" -AddressFamily IPv4 |
+Format-Table InterfaceAlias, Dhcp, ConnectionState
+
+InterfaceAlias     Dhcp ConnectionState
+--------------     ---- ---------------
+Ethernet       Disabled       Connected
+
+
+PS C:\WINDOWS\system32> Install-WindowsFeature AD-Domain-Services, DNS -IncludeManagementTools
+
+Success Restart Needed Exit Code      Feature Result
+------- -------------- ---------      --------------
+True    No             Success        {Active Directory Domain Services, DNS Ser...
+
+
+PS C:\WINDOWS\system32> ipconfig /all
+
+Windows IP Configuration
+
+   Host Name . . . . . . . . . . . . : SRV-ZELA01
+   Primary Dns Suffix  . . . . . . . :
+   Node Type . . . . . . . . . . . . : Hybrid
+   IP Routing Enabled. . . . . . . . : No
+   WINS Proxy Enabled. . . . . . . . : No
+
+Ethernet adapter Ethernet:
+
+   Connection-specific DNS Suffix  . :
+   Description . . . . . . . . . . . : Intel(R) PRO/1000 MT Desktop Adapter
+   Physical Address. . . . . . . . . : 08-00-27-60-A2-54
+   DHCP Enabled. . . . . . . . . . . : No
+   Autoconfiguration Enabled . . . . : Yes
+   IPv6 Address. . . . . . . . . . . : fd17:625c:f037:2:c1e2:68af:5062:69af(Preferred)
+   Link-local IPv6 Address . . . . . : fe80::f147:df33:c470:55a1%6(Preferred)
+   IPv4 Address. . . . . . . . . . . : 192.168.56.10(Preferred)
+   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+   Default Gateway . . . . . . . . . : fe80::2%6
+                                       192.168.56.1
+   DNS Servers . . . . . . . . . . . : 192.168.56.10
+   NetBIOS over Tcpip. . . . . . . . : Enabled
+PS C:\WINDOWS\system32> Install-WindowsFeature AD-Domain-Services, DNS -IncludeManagementTools
+
+
+Success Restart Needed Exit Code      Feature Result
+------- -------------- ---------      --------------
+True    No             NoChangeNeeded {}
+
+
+PS C:\WINDOWS\system32> Get-WindowsFeature AD-Domain-Services, DNS | Format-Table Name, InstallState
+
+Name               InstallState
+----               ------------
+AD-Domain-Services    Installed
+DNS                   Installed
+
+
+PS C:\WINDOWS\system32> $dsrm = Read-Host "Admin12!" -AsSecureString
+Install-ADDSForest -DomainName "zelabairro.local" -DomainNetbiosName "ZELA" -InstallDns:$true -SafeModeAdministratorPassword $dsrm -Force:$true
+
+WARNING: A delegation for this DNS server cannot be created because the authoritative parent zone cannot be found or it does not run Windows DNS server. If you are integrating with an existing DNS infrastructure, you should manually create a delegation to this DNS server in the parent zone to ensure reliable name resolution from outside the domain "zelabairro.local". Otherwise, no action is required.
+WARNING: A delegation for this DNS server cannot be created because the authoritative parent zone cannot be found or it does not run Windows DNS server. If you are integrating with an existing DNS infrastructure, you should manually create a delegation to this DNS server in the parent zone to ensure reliable name resolution from outside the domain "zelabairro.local". Otherwise, no action is required.
+
+Message                          Context           RebootRequired  Status
+-------                          -------           --------------  ------
+Operation completed successfully DCPromo.General.3          False Success
+
+
+
+**********************
+Windows PowerShell transcript start
+Start time: 20261117120430
+Username: ZELA\zelaadmin
+RunAs User: ZELA\zelaadmin
+Configuration Name: 
+Machine: SRV-ZELA01 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 944
+PSVersion: 5.1.26100.7462
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
+BuildVersion: 10.0.26100.7462
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\ZelaBairro\Evidencias\transcript-20261117-1204.txt
+PS C:\WINDOWS\system32> cls
+PS C:\WINDOWS\system32> hostname
+Get-CimInstance Win32_ComputerSystem | Format-List Name, Domain, PartOfDomain, DomainRole
+
+SRV-ZELA01
+
+
+Name         : SRV-ZELA01
+Domain       : zelabairro.local
+PartOfDomain : True
+DomainRole   : 5
+
+
+
+PS C:\WINDOWS\system32> cls
+PS C:\WINDOWS\system32> Get-ADDomain | Format-List Name, DNSRoot, NetBIOSName, DomainMode, PDCEmulator
+Get-ADForest | Format-List Name, ForestMode, RootDomain, SchemaMaster
+Get-Service NTDS, DNS, ADWS, Netlogon | Format-Table Name, Status, StartType
+
+
+
+Name        : zelabairro
+DNSRoot     : zelabairro.local
+NetBIOSName : ZELA
+DomainMode  : Windows2025Domain
+PDCEmulator : SRV-ZELA01.zelabairro.local
+
+
+
+
+
+Name         : zelabairro.local
+ForestMode   : Windows2025Forest
+RootDomain   : zelabairro.local
+SchemaMaster : SRV-ZELA01.zelabairro.local
+
+
+
+
+Name      Status StartType
+----      ------ ---------
+ADWS     Running Automatic
+DNS      Running Automatic
+Netlogon Running Automatic
+NTDS     Running Automatic
+
+
+PS C:\WINDOWS\system32> Get-ADDomain | Format-List Name, DNSRoot, NetBIOSName, DomainMode, PDCEmulator
+
+
+Name        : zelabairro
+DNSRoot     : zelabairro.local
+NetBIOSName : ZELA
+DomainMode  : Windows2025Domain
+PDCEmulator : SRV-ZELA01.zelabairro.local
+
+
+
+PS C:\WINDOWS\system32> cls
+PS C:\WINDOWS\system32> Get-ADDomain | Format-List Name, DNSRoot, NetBIOSName, DomainMode, PDCEmulator
+
+
+Name        : zelabairro
+DNSRoot     : zelabairro.local
+NetBIOSName : ZELA
+DomainMode  : Windows2025Domain
+PDCEmulator : SRV-ZELA01.zelabairro.local
+
+
+
+PS C:\WINDOWS\system32> Get-ADForest | Format-List Name, ForestMode, RootDomain, SchemaMaster
+
+
+Name         : zelabairro.local
+ForestMode   : Windows2025Forest
+RootDomain   : zelabairro.local
+SchemaMaster : SRV-ZELA01.zelabairro.local
+
+
+
+PS C:\WINDOWS\system32> Get-Service NTDS, DNS, ADWS, Netlogon | Format-Table Name, Status, StartType
+
+Name      Status StartType
+----      ------ ---------
+ADWS     Running Automatic
+DNS      Running Automatic
+Netlogon Running Automatic
+NTDS     Running Automatic
+
+
+PS C:\WINDOWS\system32> $ip = "192.168.56.10"   # <-- o mesmo IP do passo 1.2
+$o  = $ip.Split(".")
+
+Add-DnsServerResourceRecordA -Name "app" -ZoneName "zelabairro.local" -IPv4Address $ip
+Add-DnsServerPrimaryZone -NetworkId ("{0}.{1}.{2}.0/24" -f $o[0],$o[1],$o[2]) -ReplicationScope Domain
+Add-DnsServerResourceRecordPtr -Name $o[3] -ZoneName ("{0}.{1}.{2}.in-addr.arpa" -f $o[2],$o[1],$o[0]) -PtrDomainName "SRV-ZELA01.zelabairro.local"
+Add-DnsServerForwarder -IPAddress 8.8.8.8     # opcional: para a VM continuar acessando a internet
+Get-DnsServerResourceRecord -ZoneName "zelabairro.local" | Where-Object HostName -in "app","SRV-ZELA01" | Format-Table HostName, RecordType, RecordData
+
+
+HostName   RecordType RecordData
+--------   ---------- ----------
+app        A          DnsServerResourceRecordA
+srv-zela01 A          DnsServerResourceRecordA
+
+
+PS C:\WINDOWS\system32> nslookup zelabairro.local
+DNS request timed out.
+    timeout was 2 seconds.
+Server:  UnKnown
+Address:  ::1
+
+Name:    zelabairro.local
+Address:  192.168.56.10
+PS C:\WINDOWS\system32> nslookup app.zelabairro.local
+DNS request timed out.
+    timeout was 2 seconds.
+Server:  UnKnown
+Address:  ::1
+
+Name:    app.zelabairro.local
+Address:  192.168.56.10
+PS C:\WINDOWS\system32> nslookup SRV-ZELA01.zelabairro.local
+DNS request timed out.
+    timeout was 2 seconds.
+Server:  UnKnown
+Address:  ::1
+
+Name:    SRV-ZELA01.zelabairro.local
+Address:  192.168.56.10
+PS C:\WINDOWS\system32> Resolve-DnsName _ldap._tcp.dc._msdcs.zelabairro.local -Type SRV | Format-Table Name, Type, NameTarget, Port
+
+Name                                  Type NameTarget                  Port
+----                                  ---- ----------                  ----
+_ldap._tcp.dc._msdcs.zelabairro.local  SRV srv-zela01.zelabairro.local  389
+srv-zela01.zelabairro.local              A
+
+
+PS C:\WINDOWS\system32> Get-Service DNS, NTDS
+
+Status   Name               DisplayName
+------   ----               -----------
+Running  DNS                DNS Server
+Running  NTDS               Active Directory Domain Services
+
+
+PS C:\WINDOWS\system32> nslookup zelabairro.local 192.168.56.10
+Server:  SRV-ZELA01.zelabairro.local
+Address:  192.168.56.10
+
+Name:    zelabairro.local
+Address:  192.168.56.10
+PS C:\WINDOWS\system32> nslookup zelabairro.local
+nslookup app.zelabairro.local
+nslookup SRV-ZELA01.zelabairro.local
+Resolve-DnsName _ldap._tcp.dc._msdcs.zelabairro.local -Type SRV | Format-Table Name, Type, NameTarget, Port
+
+DNS request timed out.
+    timeout was 2 seconds.
+Server:  UnKnown
+Address:  ::1
+
+Name:    zelabairro.local
+Address:  192.168.56.10
+DNS request timed out.
+    timeout was 2 seconds.
+Server:  UnKnown
+Address:  ::1
+
+Name:    app.zelabairro.local
+Address:  192.168.56.10
+DNS request timed out.
+    timeout was 2 seconds.
+Server:  UnKnown
+Address:  ::1
+
+Name:    SRV-ZELA01.zelabairro.local
+Address:  192.168.56.10
+
+Name                                  Type NameTarget                  Port
+----                                  ---- ----------                  ----
+_ldap._tcp.dc._msdcs.zelabairro.local  SRV srv-zela01.zelabairro.local  389
+srv-zela01.zelabairro.local              A
+
+
+PS C:\WINDOWS\system32> nslookup zelabairro.local
+DNS request timed out.
+    timeout was 2 seconds.
+Server:  UnKnown
+Address:  ::1
+
+Name:    zelabairro.local
+Address:  192.168.56.10
+PS C:\WINDOWS\system32> cls
+PS C:\WINDOWS\system32> nslookup zelabairro.local 192.168.56.10
+Server:  SRV-ZELA01.zelabairro.local
+Address:  192.168.56.10
+
+Name:    zelabairro.local
+Address:  192.168.56.10
+PS C:\WINDOWS\system32> nslookup app.zelabairro.local 192.168.56.10
+Server:  SRV-ZELA01.zelabairro.local
+Address:  192.168.56.10
+
+Name:    app.zelabairro.local
+Address:  192.168.56.10
+PS C:\WINDOWS\system32> nslookup SRV-ZELA01.zelabairro.local 192.168.56.10
+Server:  SRV-ZELA01.zelabairro.local
+Address:  192.168.56.10
+
+Name:    SRV-ZELA01.zelabairro.local
+Address:  192.168.56.10
+PS C:\WINDOWS\system32> Test-NetConnection SRV-ZELA01.zelabairro.local -Port 53
+Test-NetConnection SRV-ZELA01.zelabairro.local -Port 389
+
+
+ComputerName     : SRV-ZELA01.zelabairro.local
+RemoteAddress    : fe80::f147:df33:c470:55a1%6
+RemotePort       : 53
+InterfaceAlias   : Ethernet
+SourceAddress    : fe80::f147:df33:c470:55a1%6
+TcpTestSucceeded : True
+
+ComputerName     : SRV-ZELA01.zelabairro.local
+RemoteAddress    : fe80::f147:df33:c470:55a1%6
+RemotePort       : 389
+InterfaceAlias   : Ethernet
+SourceAddress    : fe80::f147:df33:c470:55a1%6
+TcpTestSucceeded : True
+
+
+
+PS C:\WINDOWS\system32> Test-NetConnection SRV-ZELA01.zelabairro.local -Port 53
+
+
+ComputerName     : SRV-ZELA01.zelabairro.local
+RemoteAddress    : fe80::f147:df33:c470:55a1%6
+RemotePort       : 53
+InterfaceAlias   : Ethernet
+SourceAddress    : fe80::f147:df33:c470:55a1%6
+TcpTestSucceeded : True
+
+
+
+PS C:\WINDOWS\system32> Test-NetConnection SRV-ZELA01.zelabairro.local -Port 389
+
+
+ComputerName     : SRV-ZELA01.zelabairro.local
+RemoteAddress    : fe80::f147:df33:c470:55a1%6
+RemotePort       : 389
+InterfaceAlias   : Ethernet
+SourceAddress    : fe80::f147:df33:c470:55a1%6
+TcpTestSucceeded : True
+
+
+
+PS C:\WINDOWS\system32> $dom = "DC=zelabairro,DC=local"
+New-ADOrganizationalUnit -Name "ZelaBairro" -Path $dom
+New-ADOrganizationalUnit -Name "Usuarios"   -Path "OU=ZelaBairro,$dom"
+New-ADGroup -Name "GG_Agentes"   -GroupScope Global -Path "OU=Usuarios,OU=ZelaBairro,$dom"
+New-ADGroup -Name "GG_Admins_TI" -GroupScope Global -Path "OU=Usuarios,OU=ZelaBairro,$dom"
+
+$senha = Read-Host "Senha dos usuarios simulados" -AsSecureString
+foreach ($u in "agente.sim01","agente.sim02","ti.sim01") {
+  New-ADUser -Name $u -SamAccountName $u -UserPrincipalName "$u@zelabairro.local" -Path "OU=Usuarios,OU=ZelaBairro,$dom" -AccountPassword $senha -Enabled $true
+}
+Add-ADGroupMember -Identity "GG_Agentes"   -Members "agente.sim01","agente.sim02"
+Add-ADGroupMember -Identity "GG_Admins_TI" -Members "ti.sim01"
+
+PS C:\WINDOWS\system32> Get-ADOrganizationalUnit -Filter 'Name -like "ZelaBairro" -or Name -like "Usuarios"' | Format-Table Name, DistinguishedName
+Get-ADGroup -Filter 'Name -like "GG_*"' | Format-Table Name, GroupScope
+Get-ADUser -Filter * -SearchBase "OU=Usuarios,OU=ZelaBairro,$dom" | Format-Table Name, SamAccountName, Enabled
+Get-ADGroupMember GG_Agentes | Format-Table Name, SamAccountName
+
+
+Name       DistinguishedName
+----       -----------------
+ZelaBairro OU=ZelaBairro,DC=zelabairro,DC=local
+Usuarios   OU=Usuarios,OU=ZelaBairro,DC=zelabairro,DC=local
+
+
+
+Name         GroupScope
+----         ----------
+GG_Admins_TI     Global
+GG_Agentes       Global
+
+
+
+Name         SamAccountName Enabled
+----         -------------- -------
+agente.sim01 agente.sim01      True
+agente.sim02 agente.sim02      True
+ti.sim01     ti.sim01          True
+
+
+
+Name         SamAccountName
+----         --------------
+agente.sim01 agente.sim01
+agente.sim02 agente.sim02
+
+
+PS C:\WINDOWS\system32> Write-Host "`n========== ESTRUTURA DO DOMINIO ==========" -ForegroundColor Cyan
+
+Get-ADOrganizationalUnit -Filter * |
+Where-Object DistinguishedName -like "*OU=ZelaBairro,*" |
+Select-Object Name, DistinguishedName |
+Format-List
+
+Write-Host "`n========== GRUPOS ==========" -ForegroundColor Cyan
+
+Get-ADGroup -Filter 'Name -like "GG_*"' |
+Select-Object Name, GroupScope, DistinguishedName |
+Format-Table -AutoSize
+
+Write-Host "`n========== USUARIOS ==========" -ForegroundColor Cyan
+
+Get-ADUser -Filter * -SearchBase "OU=Usuarios,OU=ZelaBairro,$dom" |
+Select-Object Name, SamAccountName, Enabled |
+Format-Table -AutoSize
+
+Write-Host "`n========== MEMBROS DOS GRUPOS ==========" -ForegroundColor Cyan
+
+foreach ($grupo in "GG_Agentes", "GG_Admins_TI") {
+    Write-Host "`nGrupo: $grupo" -ForegroundColor Yellow
+
+    Get-ADGroupMember -Identity $grupo |
+    Select-Object Name, SamAccountName |
+    Format-Table -AutoSize
+}
+
+========== ESTRUTURA DO DOMINIO ==========
+
+
+Name              : ZelaBairro
+DistinguishedName : OU=ZelaBairro,DC=zelabairro,DC=local
+
+Name              : Usuarios
+DistinguishedName : OU=Usuarios,OU=ZelaBairro,DC=zelabairro,DC=local
+
+
+
+
+========== GRUPOS ==========
+
+Name         GroupScope DistinguishedName
+----         ---------- -----------------
+GG_Admins_TI     Global CN=GG_Admins_TI,OU=Usuarios,OU=ZelaBairro,DC=zelabairro,DC=local
+GG_Agentes       Global CN=GG_Agentes,OU=Usuarios,OU=ZelaBairro,DC=zelabairro,DC=local
+
+
+
+========== USUARIOS ==========
+
+Name         SamAccountName Enabled
+----         -------------- -------
+agente.sim01 agente.sim01      True
+agente.sim02 agente.sim02      True
+ti.sim01     ti.sim01          True
+
+
+
+========== MEMBROS DOS GRUPOS ==========
+
+Grupo: GG_Agentes
+
+Name         SamAccountName
+----         --------------
+agente.sim01 agente.sim01
+agente.sim02 agente.sim02
+
+
+
+Grupo: GG_Admins_TI
+
+Name     SamAccountName
+----     --------------
+ti.sim01 ti.sim01
+
+
+PS C:\WINDOWS\system32> cls
+PS C:\WINDOWS\system32> Install-WindowsFeature -Name Web-Server, Web-Static-Content, Web-Default-Doc, Web-Http-Errors, Web-Http-Logging, Web-Request-Monitor, Web-Filtering, Web-Stat-Compression, Web-Mgmt-Console, Web-Scripting-Tools
+Get-WindowsFeature Web-* | Where-Object Installed | Format-Table Name, InstallState
+
+
+Success Restart Needed Exit Code      Feature Result
+------- -------------- ---------      --------------
+True    No             Success        {Common HTTP Features, Default Document, D...
+
+
+
+Name                 InstallState
+----                 ------------
+Web-Server              Installed
+Web-WebServer           Installed
+Web-Common-Http         Installed
+Web-Default-Doc         Installed
+Web-Dir-Browsing        Installed
+Web-Http-Errors         Installed
+Web-Static-Content      Installed
+Web-Health              Installed
+Web-Http-Logging        Installed
+Web-Request-Monitor     Installed
+Web-Performance         Installed
+Web-Stat-Compression    Installed
+Web-Security            Installed
+Web-Filtering           Installed
+Web-Mgmt-Tools          Installed
+Web-Mgmt-Console        Installed
+Web-Scripting-Tools     Installed
+
+
+PS C:\WINDOWS\system32> New-Item -ItemType Directory -Force -Path C:\ZelaBairro\Site, C:\ZelaBairro\Fotos, C:\ZelaBairro\Logs | Out-Null
+
+icacls C:\ZelaBairro /inheritance:r
+icacls C:\ZelaBairro /grant "NT AUTHORITY\SYSTEM:(OI)(CI)F" "BUILTIN\Administrators:(OI)(CI)F"
+icacls C:\ZelaBairro\Site  /grant "BUILTIN\IIS_IUSRS:(OI)(CI)RX" "NT AUTHORITY\IUSR:(OI)(CI)RX"
+icacls C:\ZelaBairro\Fotos /grant "ZELA\GG_Agentes:(OI)(CI)M"
+
+processed file: C:\ZelaBairro
+Successfully processed 1 files; Failed processing 0 files
+processed file: C:\ZelaBairro
+Successfully processed 1 files; Failed processing 0 files
+processed file: C:\ZelaBairro\Site
+Successfully processed 1 files; Failed processing 0 files
+processed file: C:\ZelaBairro\Fotos
+Successfully processed 1 files; Failed processing 0 files
+PS C:\WINDOWS\system32> @'
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZelaBairro - Painel de ocorrencias (demonstracao)</title>
+<style>
+body{font-family:Arial,sans-serif;margin:0;background:#f4f6f8;color:#1b1f23;font-size:18px}
+header{background:#1f3864;color:#fff;padding:20px 24px}
+header h1{margin:0;font-size:26px}
+header p{margin:6px 0 0;font-size:16px}
+main{max-width:980px;margin:24px auto;padding:0 16px}
+.aviso{background:#fff8e1;border:1px solid #f0c36d;padding:12px 16px;border-radius:8px;font-size:16px}
+.resumo{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+.card{background:#fff;border:1px solid #d9dee3;border-radius:8px;padding:12px 16px;min-width:150px}
+.card b{display:block;font-size:28px}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{padding:12px;border-bottom:1px solid #d9dee3;text-align:left}
+th{background:#e8eef7}
+.tag{display:inline-block;padding:4px 10px;border-radius:12px;font-size:15px;font-weight:bold}
+.Critica{background:#b71c1c;color:#fff}
+.Alta{background:#bf360c;color:#fff}
+.Media{background:#f9a825;color:#1b1f23}
+.Baixa{background:#2e7d32;color:#fff}
+footer{max-width:980px;margin:24px auto;padding:0 16px;font-size:14px;color:#4a5560}
+</style>
+</head>
+<body>
+<header>
+<h1>ZelaBairro - Painel de ocorrencias</h1>
+<p>Zeladoria colaborativa de Carapicuiba - SP | Hospedado no IIS (Windows Server)</p>
+</header>
+<main>
+<p class="aviso">Pagina de demonstracao para a disciplina de Sistemas Operacionais. Todos os dados abaixo sao simulados (sem dados pessoais reais).</p>
+<div class="resumo" id="resumo"></div>
+<table>
+<thead><tr><th>ID</th><th>Categoria</th><th>Bairro (simulado)</th><th>Origem</th><th>Status</th><th>Criticidade</th></tr></thead>
+<tbody id="lista"><tr><td colspan="6">Carregando...</td></tr></tbody>
+</table>
+</main>
+<footer id="rodape"></footer>
+<script>
+const ordem={"Critica":0,"Alta":1,"Media":2,"Baixa":3};
+function celula(tr,texto,classe){
+  const td=document.createElement("td");
+  if(classe){const s=document.createElement("span");s.className="tag "+classe;s.textContent=texto;td.appendChild(s);}
+  else{td.textContent=texto;}
+  tr.appendChild(td);
+}
+fetch("ocorrencias.json").then(function(r){
+  if(!r.ok){throw new Error("HTTP "+r.status);}
+  return r.json();
+}).then(function(dados){
+  dados.sort(function(a,b){return ordem[a.criticidade]-ordem[b.criticidade];});
+  const tb=document.getElementById("lista");tb.textContent="";
+  dados.forEach(function(o){
+    const tr=document.createElement("tr");
+    celula(tr,o.id);celula(tr,o.categoria);celula(tr,o.bairro);celula(tr,o.origem);celula(tr,o.status);
+    celula(tr,o.criticidade,o.criticidade);
+    tb.appendChild(tr);
+  });
+  const abertas=dados.filter(function(o){return o.status!=="Concluida";}).length;
+  const criticas=dados.filter(function(o){return o.criticidade==="Critica"||o.criticidade==="Alta";}).length;
+  document.getElementById("resumo").innerHTML=
+    '<div class="card"><b>'+dados.length+'</b>ocorrencias</div>'+
+    '<div class="card"><b>'+abertas+'</b>em aberto</div>'+
+    '<div class="card"><b>'+criticas+'</b>alta ou critica</div>';
+}).catch(function(e){
+  document.getElementById("lista").innerHTML='<tr><td colspan="6">Erro ao carregar os dados: '+e.message+'</td></tr>';
+});
+document.getElementById("rodape").textContent="Servidor: "+location.host+" | Carregado em "+new Date().toLocaleString("pt-BR");
+</script>
+</body>
+</html>
+'@ | Set-Content -Path C:\ZelaBairro\Site\index.html -Encoding UTF8
+
+PS C:\WINDOWS\system32> @'
+[
+  {"id":"ZB-0001","categoria":"Buraco na via","bairro":"Bairro Piloto A","latitude":-23.5221,"longitude":-46.8352,"status":"Em triagem","criticidade":"Alta","origem":"APP"},
+  {"id":"ZB-0002","categoria":"Poste apagado","bairro":"Bairro Piloto A","latitude":-23.5230,"longitude":-46.8361,"status":"Aberta","criticidade":"Media","origem":"APP"},
+  {"id":"ZB-0003","categoria":"Descarte irregular de lixo","bairro":"Bairro Piloto B","latitude":-23.5198,"longitude":-46.8340,"status":"Despachada","criticidade":"Baixa","origem":"TERMINAL"},
+  {"id":"ZB-0004","categoria":"Calcada obstruida","bairro":"Bairro Piloto B","latitude":-23.5210,"longitude":-46.8375,"status":"Aberta","criticidade":"Media","origem":"APP"},
+  {"id":"ZB-0005","categoria":"Alagamento na via","bairro":"Bairro Piloto C","latitude":-23.5245,"longitude":-46.8330,"status":"Em triagem","criticidade":"Critica","origem":"IOT"},
+  {"id":"ZB-0006","categoria":"Semaforo com defeito","bairro":"Bairro Piloto C","latitude":-23.5252,"longitude":-46.8348,"status":"Concluida","criticidade":"Alta","origem":"IOT"}
+]
+'@ | Set-Content -Path C:\ZelaBairro\Site\ocorrencias.json -Encoding UTF8
+
+PS C:\WINDOWS\system32> 'OK - ZelaBairro no ar' | Set-Content -Path C:\ZelaBairro\Site\health.txt -Encoding ASCII
+
+
+**********************
+Windows PowerShell transcript start
+Start time: 20261117161051
+Username: ZELA\zelaadmin
+RunAs User: ZELA\zelaadmin
+Configuration Name: 
+Machine: SRV-ZELA01 (Microsoft Windows NT 10.0.26100.0)
+Host Application: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+Process ID: 400
+PSVersion: 5.1.26100.7462
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.7462
+BuildVersion: 10.0.26100.7462
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Transcript started, output file is C:\ZelaBairro\Evidencias\transcript-20261117-1610.txt
+PS C:\WINDOWS\system32> Get-ChildItem C:\ZelaBairro -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+Get-Content C:\ZelaBairro\Site\health.txt
+
+
+FullName                                              Length
+--------                                              ------
+C:\ZelaBairro\Evidencias
+C:\ZelaBairro\Fotos
+C:\ZelaBairro\Logs
+C:\ZelaBairro\Site
+C:\ZelaBairro\Evidencias\transcript-20261117-1121.txt 11009
+C:\ZelaBairro\Evidencias\transcript-20261117-1204.txt 18738
+C:\ZelaBairro\Evidencias\transcript-20261117-1610.txt 0
+C:\ZelaBairro\Site\health.txt                         23
+C:\ZelaBairro\Site\index.html                         3391
+C:\ZelaBairro\Site\ocorrencias.json                   1081
+
+
+OK - ZelaBairro no ar
+PS C:\WINDOWS\system32> cd zelabairro
+cd : Cannot find path 'C:\WINDOWS\system32\zelabairro' because it does not exist.
+At line:1 char:1
++ cd zelabairro
++ ~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\WINDOWS\system32\zelabairro:String) [Set-Location], 
+ItemNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.SetLocationCommand
+cd : Cannot find path 'C:\WINDOWS\system32\zelabairro' because it does not exist.
+At line:1 char:1
++ cd zelabairro
++ ~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\WINDOWS\system32\zelabairro:String) [Set-Location], ItemNo
+   tFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.SetLocationCommand
+
+PS C:\WINDOWS\system32> cd ZelaBairro
+cd : Cannot find path 'C:\WINDOWS\system32\ZelaBairro' because it does not exist.
+At line:1 char:1
++ cd ZelaBairro
++ ~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\WINDOWS\system32\ZelaBairro:String) [Set-Location], 
+ItemNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.SetLocationCommand
+cd : Cannot find path 'C:\WINDOWS\system32\ZelaBairro' because it does not exist.
+At line:1 char:1
++ cd ZelaBairro
++ ~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (C:\WINDOWS\system32\ZelaBairro:String) [Set-Location], ItemNo
+   tFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.SetLocationCommand
+
+PS C:\WINDOWS\system32> cd \ZelaBairro
+PS C:\ZelaBairro> dir
+
+
+    Directory: C:\ZelaBairro
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----        11/17/2026   4:10 PM                Evidencias
+d-----        11/17/2026   3:44 PM                Fotos
+d-----        11/17/2026   3:44 PM                Logs
+d-----        11/17/2026   3:46 PM                Site
+
+
+PS C:\ZelaBairro> cd ..
+PS C:\> Get-ChildItem C:\ZelaBairro -Recurse | Select-Object FullName, Length | Format-Table -AutoSize
+Get-Content C:\ZelaBairro\Site\health.txt
+
+
+FullName                                              Length
+--------                                              ------
+C:\ZelaBairro\Evidencias
+C:\ZelaBairro\Fotos
+C:\ZelaBairro\Logs
+C:\ZelaBairro\Site
+C:\ZelaBairro\Evidencias\transcript-20261117-1121.txt 11009
+C:\ZelaBairro\Evidencias\transcript-20261117-1204.txt 18738
+C:\ZelaBairro\Evidencias\transcript-20261117-1610.txt 0
+C:\ZelaBairro\Site\health.txt                         23
+C:\ZelaBairro\Site\index.html                         3391
+C:\ZelaBairro\Site\ocorrencias.json                   1081
+
+
+OK - ZelaBairro no ar
+PS C:\> icacls C:\ZelaBairro\Site
+cls
+C:\ZelaBairro\Site BUILTIN\Administrators:(F)
+                   NT AUTHORITY\IUSR:(OI)(CI)(RX)
+                   BUILTIN\IIS_IUSRS:(OI)(CI)(RX)
+                   BUILTIN\Administrators:(I)(OI)(CI)(F)
+                   NT AUTHORITY\SYSTEM:(I)(OI)(CI)(F)
+                   ZELA\zelaadmin:(I)(OI)(CI)(F)
+
+Successfully processed 1 files; Failed processing 0 files
+PS C:\> icacls C:\ZelaBairro\Site
+
+C:\ZelaBairro\Site BUILTIN\Administrators:(F)
+                   NT AUTHORITY\IUSR:(OI)(CI)(RX)
+                   BUILTIN\IIS_IUSRS:(OI)(CI)(RX)
+                   BUILTIN\Administrators:(I)(OI)(CI)(F)
+                   NT AUTHORITY\SYSTEM:(I)(OI)(CI)(F)
+                   ZELA\zelaadmin:(I)(OI)(CI)(F)
+
+Successfully processed 1 files; Failed processing 0 files
+PS C:\> icacls C:\ZelaBairro\Foto
+C:\ZelaBairro\Foto: The system cannot find the file specified.
+
+Successfully processed 0 files; Failed processing 1 files
+PS C:\> icacls C:\ZelaBairro\Site
+
+C:\ZelaBairro\Site BUILTIN\Administrators:(F)
+                   NT AUTHORITY\IUSR:(OI)(CI)(RX)
+                   BUILTIN\IIS_IUSRS:(OI)(CI)(RX)
+                   BUILTIN\Administrators:(I)(OI)(CI)(F)
+                   NT AUTHORITY\SYSTEM:(I)(OI)(CI)(F)
+                   ZELA\zelaadmin:(I)(OI)(CI)(F)
+
+Successfully processed 1 files; Failed processing 0 files
+PS C:\> icacls C:\ZelaBairro\Fotos
+C:\ZelaBairro\Fotos BUILTIN\Administrators:(F)
+                    ZELA\GG_Agentes:(OI)(CI)(M)
+                    BUILTIN\Administrators:(I)(OI)(CI)(F)
+                    NT AUTHORITY\SYSTEM:(I)(OI)(CI)(F)
+                    ZELA\zelaadmin:(I)(OI)(CI)(F)
+
+Successfully processed 1 files; Failed processing 0 files
+PS C:\> Import-Module WebAdministration
+New-WebAppPool -Name "ZelaBairroPool"
+$p = "IIS:\AppPools\ZelaBairroPool"
+Set-ItemProperty $p -Name managedRuntimeVersion -Value ""
+Set-ItemProperty $p -Name startMode -Value "AlwaysRunning"
+Set-ItemProperty $p -Name autoStart -Value $true
+Set-ItemProperty $p -Name processModel.idleTimeout -Value "00:00:00"
+Set-ItemProperty $p -Name failure.rapidFailProtection -Value $true
+Set-ItemProperty $p -Name failure.rapidFailProtectionMaxCrashes -Value 5
+Set-ItemProperty $p -Name failure.rapidFailProtectionInterval -Value "00:05:00"
+
+$appcmd = "$env:windir\system32\inetsrv\appcmd.exe"
+& $appcmd list apppool "ZelaBairroPool" /text:* | Select-String -Pattern "^(name|state|managedRuntimeVersion|startMode|autoStart|processModel.identityType|processModel.idleTimeout|failure.rapidFail)"
+
+
+Name                     State        Applications
+----                     -----        ------------
+ZelaBairroPool           Started
+
+
+PS C:\> cls
+PS C:\> Import-Module WebAdministration
+New-WebAppPool -Name "ZelaBairroPool"
+$p = "IIS:\AppPools\ZelaBairroPool"
+Set-ItemProperty $p -Name managedRuntimeVersion -Value ""
+Set-ItemProperty $p -Name startMode -Value "AlwaysRunning"
+Set-ItemProperty $p -Name autoStart -Value $true
+Set-ItemProperty $p -Name processModel.idleTimeout -Value "00:00:00"
+Set-ItemProperty $p -Name failure.rapidFailProtection -Value $true
+Set-ItemProperty $p -Name failure.rapidFailProtectionMaxCrashes -Value 5
+Set-ItemProperty $p -Name failure.rapidFailProtectionInterval -Value "00:05:00"
+
+$appcmd = "$env:windir\system32\inetsrv\appcmd.exe"
+& $appcmd list apppool "ZelaBairroPool" /text:* | Select-String -Pattern "^(name|state|managedRuntimeVersion|startMode|autoStart|processModel.identityType|processModel.idleTimeout|failure.rapidFail)"
+
+new-item : Destination element already exists, please use "force" parameter to override.
+    + CategoryInfo          : InvalidArgument: (:) [New-Item], ArgumentException
+    + FullyQualifiedErrorId : Destination element already exists, please use "force" parameter to 
+override.,Microsoft.PowerShell.Commands.NewItemCommand
+New-WebAppPool : Destination element already exists, please use "force" parameter to override.
+At line:2 char:1
++ New-WebAppPool -Name "ZelaBairroPool"
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [New-WebAppPool], ArgumentException
+    + FullyQualifiedErrorId : Destination element already exists, please use "force" parameter to 
+override.,Microsoft.IIs.PowerShell.Provider.NewAppPoolCommand
+New-WebAppPool : Destination element already exists, please use "force" parameter to override.
+At line:2 char:1
++ New-WebAppPool -Name "ZelaBairroPool"
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [New-WebAppPool], ArgumentException
+    + FullyQualifiedErrorId : Destination element already exists, please use "force" parameter to override.,Microsoft.IIs
+   .PowerShell.Provider.NewAppPoolCommand
+
+PS C:\> TerminatingError(): "The pipeline has been stopped."
+>> TerminatingError(): "The pipeline has been stopped."
+PS C:\> cls
+PS C:\> appcmd = "$env:windir\system32\inetsrv\appcmd.exe"
+& $appcmd list apppool "ZelaBairroPool" /text:* | Select-String -Pattern "^(name|state|managedRuntimeVersion|startMode|autoStart|processModel.identityType|processModel.idleTimeout|failure.rapidFail)"
+appcmd : The term 'appcmd' is not recognized as the name of a cmdlet, function, script file, or operable program. Check 
+the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ appcmd = "$env:windir\system32\inetsrv\appcmd.exe"
++ ~~~~~~
+    + CategoryInfo          : ObjectNotFound: (appcmd:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+appcmd : The term 'appcmd' is not recognized as the name of a cmdlet, function, script file, or operable program. Check
+the spelling of the name, or if a path was included, verify that the path is correct and try again.
+At line:1 char:1
++ appcmd = "$env:windir\system32\inetsrv\appcmd.exe"
++ ~~~~~~
+    + CategoryInfo          : ObjectNotFound: (appcmd:String) [], CommandNotFoundException
+    + FullyQualifiedErrorId : CommandNotFoundException
+
+PS C:\> $appcmd = "$env:windir\system32\inetsrv\appcmd.exe"
+& $appcmd list apppool "ZelaBairroPool" /text:* | Select-String -Pattern "^(name|state|managedRuntimeVersion|startMode|autoStart|processModel.identityType|processModel.idleTimeout|failure.rapidFail)"
+PS C:\> Import-Module WebAdministration
+
+$pool = "ZelaBairroPool"
+$config = Get-Item "IIS:\AppPools\$pool"
+
+Write-Host "`n========== IIS - APPLICATION POOL ==========" -ForegroundColor Cyan
+
+Write-Host "`nNome: $($config.Name)"
+Write-Host "Estado: $((Get-WebAppPoolState -Name $pool).Value)"
+
+Write-Host "`n========== CONFIGURACOES ==========" -ForegroundColor Cyan
+
+[PSCustomObject]@{
+    Nome                    = $config.Name
+    Estado                  = (Get-WebAppPoolState -Name $pool).Value
+    Runtime                 = if ($config.managedRuntimeVersion -eq "") { "No Managed Code" } else { $config.managedRuntimeVersion }
+    StartMode               = $config.startMode
+    AutoStart               = $config.autoStart
+    IdentityType            = $config.processModel.identityType
+    IdleTimeout             = $config.processModel.idleTimeout
+    RapidFailProtection     = $config.failure.rapidFailProtection
+    MaxCrashes              = $config.failure.rapidFailProtectionMaxCrashes
+    FailureInterval         = $config.failure.rapidFailProtectionInterval
+} | Format-List
+
+========== IIS - APPLICATION POOL ==========
+
+Nome: ZelaBairroPool
+Estado: Started
+
+========== CONFIGURACOES ==========
+
+
+Nome                : ZelaBairroPool
+Estado              : Started
+Runtime             : No Managed Code
+StartMode           : AlwaysRunning
+AutoStart           : True
+IdentityType        : ApplicationPoolIdentity
+IdleTimeout         : 00:00:00
+RapidFailProtection : True
+MaxCrashes          : 5
+FailureInterval     : 00:05:00
+
+
+
+PS C:\> Import-Module WebAdministration
+
+$site = Get-Website -Name "ZelaBairro"
+$binding = Get-WebBinding -Name "ZelaBairro"
+$firewall = Get-NetFirewallRule -DisplayName "ZelaBairro HTTP 80"
+
+Write-Host "`n========== SITE IIS =========="
+
+[PSCustomObject]@{
+    Nome             = $site.Name
+    Estado           = $site.State
+    CaminhoFisico    = $site.PhysicalPath
+    ApplicationPool  = $site.ApplicationPool
+    Protocolo        = $binding.protocol
+    Binding          = $binding.bindingInformation
+    Hostname         = "app.zelabairro.local"
+    Firewall         = $firewall.Enabled
+} | Format-List
+
+Write-Host "`n========== CONFIGURACAO DE LOGS =========="
+
+(Get-ItemProperty "IIS:\Sites\ZelaBairro").logFile |
+Select-Object directory, logFormat, enabled |
+Format-List
+
+Write-Host "`n========== REGRAS DE FIREWALL =========="
+
+Get-NetFirewallRule -DisplayName "ZelaBairro HTTP 80" |
+Select-Object DisplayName, Enabled, Direction, Action |
+Format-Table -AutoSize
+Get-NetFirewallRule : No MSFT_NetFirewallRule objects found with property 'DisplayName' equal to 'ZelaBairro HTTP 80'.  
+Verify the value of the property and retry.
+At line:5 char:13
++ $firewall = Get-NetFirewallRule -DisplayName "ZelaBairro HTTP 80"
++             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (ZelaBairro HTTP 80:String) [Get-NetFirewallRule], CimJobException
+    + FullyQualifiedErrorId : CmdletizationQuery_NotFound_DisplayName,Get-NetFirewallRule
+Get-NetFirewallRule : No MSFT_NetFirewallRule objects found with property 'DisplayName' equal to 'ZelaBairro HTTP 80'.
+Verify the value of the property and retry.
+At line:5 char:13
++ $firewall = Get-NetFirewallRule -DisplayName "ZelaBairro HTTP 80"
++             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (ZelaBairro HTTP 80:String) [Get-NetFirewallRule], CimJobException
+    + FullyQualifiedErrorId : CmdletizationQuery_NotFound_DisplayName,Get-NetFirewallRule
+
+
+========== SITE IIS ==========
+
+
+Nome            :
+Estado          :
+CaminhoFisico   :
+ApplicationPool :
+Protocolo       :
+Binding         :
+Hostname        : app.zelabairro.local
+Firewall        :
+
+
+
+
+========== CONFIGURACAO DE LOGS ==========
+Get-ItemProperty : Cannot find path 'IIS:\Sites\ZelaBairro' because it does not exist.
+At line:22 char:2
++ (Get-ItemProperty "IIS:\Sites\ZelaBairro").logFile |
++  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (IIS:\Sites\ZelaBairro:String) [Get-ItemProperty], ItemNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetItemPropertyCommand
+Get-ItemProperty : Cannot find path 'IIS:\Sites\ZelaBairro' because it does not exist.
+At line:22 char:2
++ (Get-ItemProperty "IIS:\Sites\ZelaBairro").logFile |
++  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (IIS:\Sites\ZelaBairro:String) [Get-ItemProperty], ItemNotFoundException
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetItemPropertyCommand
+
+
+========== REGRAS DE FIREWALL ==========
+Get-NetFirewallRule : No MSFT_NetFirewallRule objects found with property 'DisplayName' equal to 'ZelaBairro HTTP 80'.  
+Verify the value of the property and retry.
+At line:28 char:1
++ Get-NetFirewallRule -DisplayName "ZelaBairro HTTP 80" |
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (ZelaBairro HTTP 80:String) [Get-NetFirewallRule], CimJobException
+    + FullyQualifiedErrorId : CmdletizationQuery_NotFound_DisplayName,Get-NetFirewallRule
+Get-NetFirewallRule : No MSFT_NetFirewallRule objects found with property 'DisplayName' equal to 'ZelaBairro HTTP 80'.
+Verify the value of the property and retry.
+At line:28 char:1
++ Get-NetFirewallRule -DisplayName "ZelaBairro HTTP 80" |
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (ZelaBairro HTTP 80:String) [Get-NetFirewallRule], CimJobException
+    + FullyQualifiedErrorId : CmdletizationQuery_NotFound_DisplayName,Get-NetFirewallRule
+
+PS C:\> Stop-Website -Name "Default Web Site"
+New-Website -Name "ZelaBairro" -PhysicalPath "C:\ZelaBairro\Site" -ApplicationPool "ZelaBairroPool" -Port 80 -HostHeader "app.zelabairro.local"
+New-WebBinding -Name "ZelaBairro" -Protocol http -Port 80 -IPAddress "*"
+Set-ItemProperty "IIS:\Sites\ZelaBairro" -Name logFile.directory -Value "C:\ZelaBairro\Logs"
+New-NetFirewallRule -DisplayName "ZelaBairro HTTP 80" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow | Out-Null
+
+Get-Website -Name "ZelaBairro" | Format-List Name, State, PhysicalPath, ApplicationPool
+Get-WebBinding -Name "ZelaBairro" | Format-Table protocol, bindingInformation
+
+
+Name             ID   State      Physical Path                  Bindings
+----             --   -----      -------------                  --------
+ZelaBairro       2    Started    C:\ZelaBairro\Site             http *:80:app.zelabairro.local
+
+
+
+
+name            : ZelaBairro
+state           : Started
+physicalPath    : C:\ZelaBairro\Site
+applicationPool : ZelaBairroPool
+
+
+
+
+protocol bindingInformation
+-------- ------------------
+http     *:80:app.zelabairro.local
+http     *:80:
+
+
+PS C:\> Stop-Website -Name "Default Web Site"
+New-Website -Name "ZelaBairro" -PhysicalPath "C:\ZelaBairro\Site" -ApplicationPool "ZelaBairroPool" -Port 80 -HostHeader "app.zelabairro.local"
+New-WebBinding -Name "ZelaBairro" -Protocol http -Port 80 -IPAddress "*"
+Set-ItemProperty "IIS:\Sites\ZelaBairro" -Name logFile.directory -Value "C:\ZelaBairro\Logs"
+New-NetFirewallRule -DisplayName "ZelaBairro HTTP 80" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow | Out-Null
+
+Get-Website -Name "ZelaBairro" | Format-List Name, State, PhysicalPath, ApplicationPool
+Get-WebBinding -Name "ZelaBairro" | Format-Table protocol, bindingInformation
+
+new-item : Destination element already exists, please use "force" parameter to override.
+    + CategoryInfo          : InvalidArgument: (:) [New-Item], ArgumentException
+    + FullyQualifiedErrorId : Destination element already exists, please use "force" parameter to 
+override.,Microsoft.PowerShell.Commands.NewItemCommand
+New-Website : Destination element already exists, please use "force" parameter to override.
+At line:2 char:1
++ New-Website -Name "ZelaBairro" -PhysicalPath "C:\ZelaBairro\Site" -Ap ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [New-Website], ArgumentException
+    + FullyQualifiedErrorId : Destination element already exists, please use "force" parameter to 
+override.,Microsoft.IIs.PowerShell.Provider.NewWebsiteCommand
+New-Website : Destination element already exists, please use "force" parameter to override.
+At line:2 char:1
++ New-Website -Name "ZelaBairro" -PhysicalPath "C:\ZelaBairro\Site" -Ap ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [New-Website], ArgumentException
+    + FullyQualifiedErrorId : Destination element already exists, please use "force" parameter to override.,Microsoft.IIs
+   .PowerShell.Provider.NewWebsiteCommand
+
+PS C:\> TerminatingError(New-ItemProperty): "Filename: 
+Error: Cannot add duplicate collection entry of type 'binding' with combined key attributes 'protocol, bindingInformation' respectively set to 'http, *:80:'
+
+"
+>> TerminatingError(New-ItemProperty): "Filename: 
+Error: Cannot add duplicate collection entry of type 'binding' with combined key attributes 'protocol, bindingInformation' respectively set to 'http, *:80:'
+
+"
+new-itemproperty : Filename: 
+Error: Cannot add duplicate collection entry of type 'binding' with combined key attributes 'protocol, 
+bindingInformation' respectively set to 'http, *:80:'
+
+
+At line:3 char:1
++ New-WebBinding -Name "ZelaBairro" -Protocol http -Port 80 -IPAddress  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [New-ItemProperty], COMException
+    + FullyQualifiedErrorId : 
+System.Runtime.InteropServices.COMException,Microsoft.PowerShell.Commands.NewItemPropertyCommand
+new-itemproperty : Filename:
+Error: Cannot add duplicate collection entry of type 'binding' with combined key attributes 'protocol,
+bindingInformation' respectively set to 'http, *:80:'
+
+
+At line:3 char:1
++ New-WebBinding -Name "ZelaBairro" -Protocol http -Port 80 -IPAddress  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:) [New-ItemProperty], COMException
+    + FullyQualifiedErrorId : System.Runtime.InteropServices.COMException,Microsoft.PowerShell.Commands.NewItemPropertyCo
+   mmand
+
+
+
+name            : ZelaBairro
+state           : Started
+physicalPath    : C:\ZelaBairro\Site
+applicationPool : ZelaBairroPool
+
+
+
+
+protocol bindingInformation
+-------- ------------------
+http     *:80:app.zelabairro.local
+http     *:80:
+
+
+PS C:\> Get-WebBinding -Name "ZelaBairro" |
+Format-Table protocol, bindingInformation
+
+protocol bindingInformation
+-------- ------------------
+http     *:80:app.zelabairro.local
+http     *:80:
+
+
+PS C:\> (Invoke-WebRequest http://app.zelabairro.local/ -UseBasicParsing) | Select-Object StatusCode, StatusDescription
+(Invoke-WebRequest http://app.zelabairro.local/ocorrencias.json -UseBasicParsing) | Select-Object StatusCode
+(Invoke-WebRequest http://app.zelabairro.local/health.txt -UseBasicParsing).Content
+Test-NetConnection app.zelabairro.local -Port 80
+
+
+StatusCode StatusDescription
+---------- -----------------
+       200 OK
+       200
+OK - ZelaBairro no ar
+
+
+
+PS C:\> Start-Process "http://app.zelabairro.local"
+PS C:\> Install-WindowsFeature FS-FileServer
+New-SmbShare -Name "FotosZelaBairro" -Path "C:\ZelaBairro\Fotos" -FullAccess "ZELA\Domain Admins" -ChangeAccess "ZELA\GG_Agentes" -Description "Fotos simuladas de ocorrencias"
+Revoke-SmbShareAccess -Name "FotosZelaBairro" -AccountName "Everyone" -Force | Out-Null
+Get-SmbShare -Name "FotosZelaBairro" | Format-List Name, Path, Description
+Get-SmbShareAccess -Name "FotosZelaBairro" | Format-Table AccountName, AccessControlType, AccessRight
+
+
+Success Restart Needed Exit Code      Feature Result
+------- -------------- ---------      --------------
+True    No             NoChangeNeeded {}
+
+AvailabilityType       : NonClustered
+CachingMode            : Manual
+CATimeout              : 0
+CompressData           : False
+ConcurrentUserLimit    : 0
+ContinuouslyAvailable  : False
+CurrentUsers           : 0
+Description            : Fotos simuladas de ocorrencias
+DirectoryHandleLeasing : True
+EncryptData            : False
+FolderEnumerationMode  : Unrestricted
+IdentityRemoting       : False
+Infrastructure         : False
+IsolatedTransport      : False
+LeasingMode            : Full
+Name                   : FotosZelaBairro
+Path                   : C:\ZelaBairro\Fotos
+QoSFlowScope           : File
+QoSPolicyId            : {00000000-0000-0000-0000-000000000000}
+Scoped                 : False
+ScopeName              : *
+SecurityDescriptor     : O:SYG:SYD:(A;;FA;;;DA)(A;;0x1301bf;;;S-1-5-21-1673139557-2072886394-3296638098-1104)
+ShadowCopy             : False
+ShareState             : Online
+ShareType              : FileSystemDirectory
+SmbInstance            : Default
+Special                : False
+Temporary              : False
+Volume                 : \\?\Volume{2c0f3cbd-0000-0000-0000-500600000000}\
+PSComputerName         :
+PresetPathAcl          : System.Security.AccessControl.DirectorySecurity
+
+
+
+
+
+Name        : FotosZelaBairro
+Path        : C:\ZelaBairro\Fotos
+Description : Fotos simuladas de ocorrencias
+
+
+
+
+AccountName        AccessControlType AccessRight
+-----------        ----------------- -----------
+ZELA\Domain Admins             Allow        Full
+ZELA\GG_Agentes                Allow      Change
+
+
+PS C:\> icacls "C:\ZelaBairro\Fotos"
+C:\ZelaBairro\Fotos BUILTIN\Administrators:(F)
+                    ZELA\GG_Agentes:(OI)(CI)(M)
+                    BUILTIN\Administrators:(I)(OI)(CI)(F)
+                    NT AUTHORITY\SYSTEM:(I)(OI)(CI)(F)
+                    ZELA\zelaadmin:(I)(OI)(CI)(F)
+
+Successfully processed 1 files; Failed processing 0 files
+PS C:\> Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name fDenyTSConnections -Value 0
+Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp" -Name UserAuthentication -Value 1
+Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+Test-NetConnection localhost -Port 3389
+Get-NetFirewallRule -DisplayGroup "Remote Desktop" | Where-Object Direction -eq Inbound | Format-Table DisplayName, Enabled, Action
+
+WARNING: TCP connect to (::1 : 3389) failed
+
+
+ComputerName     : localhost
+RemoteAddress    : 127.0.0.1
+RemotePort       : 3389
+InterfaceAlias   : Loopback Pseudo-Interface 1
+SourceAddress    : 127.0.0.1
+TcpTestSucceeded : True
+
+
+
+
+DisplayName                         Enabled Action
+-----------                         ------- ------
+Remote Desktop - Shadow (TCP-In)       True  Allow
+Remote Desktop - User Mode (TCP-In)    True  Allow
+Remote Desktop - User Mode (UDP-In)    True  Allow
+
+
+PS C:\> $dom = "DC=zelabairro,DC=local"
+
+New-GPO -Name "GPO-ZelaBairro-Usuarios" -Comment "Bloqueio de tela por inatividade" | Out-Null
+$k = "HKCU\Software\Policies\Microsoft\Windows\Control Panel\Desktop"
+Set-GPRegistryValue -Name "GPO-ZelaBairro-Usuarios" -Key $k -ValueName ScreenSaveActive   -Type String -Value "1" | Out-Null
+Set-GPRegistryValue -Name "GPO-ZelaBairro-Usuarios" -Key $k -ValueName ScreenSaverIsSecure -Type String -Value "1" | Out-Null
+Set-GPRegistryValue -Name "GPO-ZelaBairro-Usuarios" -Key $k -ValueName ScreenSaveTimeOut  -Type String -Value "600" | Out-Null
+Set-GPRegistryValue -Name "GPO-ZelaBairro-Usuarios" -Key $k -ValueName "SCRNSAVE.EXE"     -Type String -Value "scrnsave.scr" | Out-Null
+New-GPLink -Name "GPO-ZelaBairro-Usuarios" -Target "OU=ZelaBairro,$dom" | Out-Null
+
+New-GPO -Name "GPO-ZelaBairro-Servidores" -Comment "Aviso legal no logon" | Out-Null
+$s = "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+Set-GPRegistryValue -Name "GPO-ZelaBairro-Servidores" -Key $s -ValueName legalnoticecaption -Type String -Value "ZelaBairro - Ambiente de laboratorio FIAP" | Out-Null
+Set-GPRegistryValue -Name "GPO-ZelaBairro-Servidores" -Key $s -ValueName legalnoticetext    -Type String -Value "Uso restrito. Todas as acoes sao registradas em log de auditoria." | Out-Null
+New-GPLink -Name "GPO-ZelaBairro-Servidores" -Target "OU=Domain Controllers,$dom" | Out-Null
+
+gpupdate /force
+Get-GPO -All | Where-Object DisplayName -like "GPO-ZelaBairro*" | Format-Table DisplayName, GpoStatus, CreationTime
+(Get-GPInheritance -Target "OU=ZelaBairro,$dom").GpoLinks | Format-Table DisplayName, Enabled, Order
+gpresult /scope computer /r | Select-Object -First 45
+
+Updating policy...
+
+Computer Policy update has completed successfully.
+User Policy update has completed successfully.
+
+DisplayName                        GpoStatus CreationTime
+-----------                        --------- ------------
+GPO-ZelaBairro-Servidores AllSettingsEnabled 11/17/2026 5:32:57 PM
+GPO-ZelaBairro-Usuarios   AllSettingsEnabled 11/17/2026 5:32:56 PM
+
+
+
+DisplayName             Enabled Order
+-----------             ------- -----
+GPO-ZelaBairro-Usuarios    True     1
+
+
+
+Microsoft (R) Windows (R) Operating System Group Policy Result tool v2.0
+c Microsoft Corporation. All rights reserved.
+
+Created on ?11/?17/?2026 at 5:33:06 PM
+
+
+
+RSOP data for  on SRV-ZELA01 : Logging Mode
+--------------------------------------------
+
+OS Configuration:            Primary Domain Controller
+OS Version:                  10.0.26100
+Site Name:                   Default-First-Site-Name
+Roaming Profile:
+Local Profile:
+Connected over a slow link?: No
+
+
+COMPUTER SETTINGS
+------------------
+    CN=SRV-ZELA01,OU=Domain Controllers,DC=zelabairro,DC=local
+    Last time Group Policy was applied: 11/17/2026 at 5:32:57 PM
+    Group Policy was applied from:      SRV-ZELA01.zelabairro.local
+    Group Policy slow link threshold:   500 kbps
+    Domain Name:                        ZELA
+    Domain Type:                        Windows 2008 or later
+
+    Applied Group Policy Objects
+    -----------------------------
+        Default Domain Controllers Policy
+        GPO-ZelaBairro-Servidores
+        Default Domain Policy
+
+    The following GPOs were not applied because they were filtered out
+    -------------------------------------------------------------------
+        Local Group Policy
+            Filtering:  Not Applied (Empty)
+
+    The computer is a part of the following security groups
+    -------------------------------------------------------
+        BUILTIN\Administrators
+        Everyone
+        BUILTIN\Pre-Windows 2000 Compatible Access
+        BUILTIN\Users
+PS C:\> gpresult /scope user /r
+
+Microsoft (R) Windows (R) Operating System Group Policy Result tool v2.0
+© Microsoft Corporation. All rights reserved.
+
+Created on ‎11/‎17/‎2026 at 5:35:39 PM
+
+
+RSOP data for ZELA\zelaadmin on SRV-ZELA01 : Logging Mode
+----------------------------------------------------------
+
+OS Configuration:            Primary Domain Controller
+OS Version:                  10.0.26100
+Site Name:                   N/A
+Roaming Profile:             N/A
+Local Profile:               C:\Users\zelaadmin
+Connected over a slow link?: No
+
+
+USER SETTINGS
+--------------
+    CN=zelaadmin,CN=Users,DC=zelabairro,DC=local
+    Last time Group Policy was applied: 11/17/2026 at 5:32:58 PM
+    Group Policy was applied from:      SRV-ZELA01.zelabairro.local
+    Group Policy slow link threshold:   500 kbps
+    Domain Name:                        ZELA
+    Domain Type:                        Windows 2008 or later
+
+    Applied Group Policy Objects
+    -----------------------------
+        N/A
+
+    The following GPOs were not applied because they were filtered out
+    -------------------------------------------------------------------
+        Local Group Policy
+            Filtering:  Not Applied (Empty)
+
+    The user is a part of the following security groups
+    ---------------------------------------------------
+        Domain Users
+        Everyone
+        BUILTIN\Users
+        BUILTIN\Administrators
+        BUILTIN\Pre-Windows 2000 Compatible Access
+        NT AUTHORITY\INTERACTIVE
+        CONSOLE LOGON
+        NT AUTHORITY\Authenticated Users
+        This Organization
+        LOCAL
+        Authentication authority asserted identity
+        High Mandatory Level
+PS C:\> gpresult /scope computer /r | Select-Object -First 45
+
+Microsoft (R) Windows (R) Operating System Group Policy Result tool v2.0
+c Microsoft Corporation. All rights reserved.
+
+Created on ?11/?17/?2026 at 5:35:53 PM
+
+
+
+RSOP data for  on SRV-ZELA01 : Logging Mode
+--------------------------------------------
+
+OS Configuration:            Primary Domain Controller
+OS Version:                  10.0.26100
+Site Name:                   Default-First-Site-Name
+Roaming Profile:
+Local Profile:
+Connected over a slow link?: No
+
+
+COMPUTER SETTINGS
+------------------
+    CN=SRV-ZELA01,OU=Domain Controllers,DC=zelabairro,DC=local
+    Last time Group Policy was applied: 11/17/2026 at 5:32:57 PM
+    Group Policy was applied from:      SRV-ZELA01.zelabairro.local
+    Group Policy slow link threshold:   500 kbps
+    Domain Name:                        ZELA
+    Domain Type:                        Windows 2008 or later
+
+    Applied Group Policy Objects
+    -----------------------------
+        Default Domain Controllers Policy
+        GPO-ZelaBairro-Servidores
+        Default Domain Policy
+
+    The following GPOs were not applied because they were filtered out
+    -------------------------------------------------------------------
+        Local Group Policy
+            Filtering:  Not Applied (Empty)
+
+    The computer is a part of the following security groups
+    -------------------------------------------------------
+        BUILTIN\Administrators
+        Everyone
+        BUILTIN\Pre-Windows 2000 Compatible Access
+        BUILTIN\Users
+PS C:\> Set-ADDefaultDomainPasswordPolicy -Identity "zelabairro.local" -MinPasswordLength 10 -ComplexityEnabled $true -LockoutThreshold 5 -LockoutDuration "00:15:00" -LockoutObservationWindow "00:15:00" -MaxPasswordAge "60.00:00:00"
+Get-ADDefaultDomainPasswordPolicy | Format-List MinPasswordLength, ComplexityEnabled, LockoutThreshold, LockoutDuration, MaxPasswordAge
+
+
+
+MinPasswordLength : 10
+ComplexityEnabled : True
+LockoutThreshold  : 5
+LockoutDuration   : 00:15:00
+MaxPasswordAge    : 60.00:00:00
+
+
+
+PS C:\> Get-Counter "\Processor(_Total)\% Processor Time" | Select-Object -ExpandProperty CounterSamples | Format-Table Path, CookedValue
+Get-Counter "\Memory\% Committed Bytes In Use" | Select-Object -ExpandProperty CounterSamples | Format-Table Path, CookedValue
+Get-Counter "\LogicalDisk(C:)\% Free Space" | Select-Object -ExpandProperty CounterSamples | Format-Table Path, CookedValue
+
+
+Path                                                 CookedValue
+----                                                 -----------
+\\srv-zela01\processor(_total)\% processor time 22.9824247125475
+
+
+
+Path                                              CookedValue
+----                                              -----------
+\\srv-zela01\memory\% committed bytes in use 71.9650546489202
+
+
+
+Path                                           CookedValue
+----                                           -----------
+\\srv-zela01\logicaldisk(c:)\% free space 45.6529516994633
+
+
+PS C:\> logman create alert "ZelaBairro-Alertas" -th "\Processor(_Total)\% Processor Time>85" "\Memory\% Committed Bytes In Use>85" "\LogicalDisk(C:)\% Free Space<15" -si 10 -el
+logman query "ZelaBairro-Alertas"
+
+The command completed successfully.
+
+Name:                 ZelaBairro-Alertas
+Status:               Stopped
+Root Path:            %systemdrive%\PerfLogs\Admin
+Segment:              Off
+Schedules:            On
+Run as:               SYSTEM
+
+Name:                 ZelaBairro-Alertas\ZelaBairro-Alertas
+Type:                 Alert
+Sample Interval:      10 second(s)
+Event Log:            On
+
+Thresholds:
+  \Processor(_Total)\% Processor Time>85
+  \Memory\% Committed Bytes In Use>85
+  \LogicalDisk(C:)\% Free Space<15
+
+The command completed successfully.
+PS C:\> auditpol /set /subcategory:"{0CCE9215-69AE-11D9-BED3-505054503030}" /success:enable /failure:enable
+auditpol /set /subcategory:"{0CCE921D-69AE-11D9-BED3-505054503030}" /success:enable /failure:enable
+auditpol /get /subcategory:"{0CCE9215-69AE-11D9-BED3-505054503030}","{0CCE921D-69AE-11D9-BED3-505054503030}"
+
+cmd /c "net use \\SRV-ZELA01\IPC$ /user:ZELA\agente.sim01 SenhaErrada#123"
+
+Get-WinEvent -FilterHashtable @{LogName='Security'; Id=4624} -MaxEvents 3 | Select-Object TimeCreated, Id, @{n='Conta';e={$_.Properties[5].Value}} | Format-Table -AutoSize
+Get-WinEvent -FilterHashtable @{LogName='Security'; Id=4625} -MaxEvents 3 | Select-Object TimeCreated, Id, @{n='Conta';e={$_.Properties[5].Value}} | Format-Table -AutoSize
+
+The command was successfully executed.
+The command was successfully executed.
+System audit policy
+Category/Subcategory                      Setting
+Logon/Logoff
+  Logon                                   Success and Failure
+Object Access
+  File System                             Success and Failure
+System error 1326 has occurred.
+
+The user name or password is incorrect.
+
+TimeCreated             Id Conta
+-----------             -- -----
+11/17/2026 5:47:49 PM 4624 SRV-ZELA01$
+11/17/2026 5:47:49 PM 4624 SRV-ZELA01$
+11/17/2026 5:47:49 PM 4624 SRV-ZELA01$
+
+
+Get-WinEvent : No events were found that match the specified selection criteria.
+At line:8 char:1
++ Get-WinEvent -FilterHashtable @{LogName='Security'; Id=4625} -MaxEven ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (:) [Get-WinEvent], Exception
+    + FullyQualifiedErrorId : NoMatchingEventsFound,Microsoft.PowerShell.Commands.GetWinEventCommand
+Get-WinEvent : No events were found that match the specified selection criteria.
+At line:8 char:1
++ Get-WinEvent -FilterHashtable @{LogName='Security'; Id=4625} -MaxEven ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (:) [Get-WinEvent], Exception
+    + FullyQualifiedErrorId : NoMatchingEventsFound,Microsoft.PowerShell.Commands.GetWinEventCommand
+
+PS C:\> logman start "ZelaBairro-Alertas"
+schtasks /create /tn "Iniciar-ZelaBairro-Alertas" /tr "logman start ZelaBairro-Alertas" /sc onstart /ru SYSTEM /f
+logman query
+
+The command completed successfully.
+SUCCESS: The scheduled task "Iniciar-ZelaBairro-Alertas" has successfully been created.
+
+Data Collector Set                      Type                          Status
+-------------------------------------------------------------------------------
+Server Manager Performance Monitor      Counter                       Stopped
+ZelaBairro-Alertas                      Alert                         Running
+
+The command completed successfully.
+PS C:\> $jobs = 1..([Environment]::ProcessorCount) | ForEach-Object { Start-Job { $fim=(Get-Date).AddSeconds(90); while((Get-Date) -lt $fim){ [math]::Sqrt(12345) | Out-Null } } }
+1..8 | ForEach-Object {
+  $v = (Get-Counter "\Processor(_Total)\% Processor Time").CounterSamples.CookedValue
+  "{0}  CPU = {1:N1} %" -f (Get-Date -Format HH:mm:ss), $v
+  Start-Sleep 5
+}
+
+18:07:42  CPU = 73.8 %
+18:07:49  CPU = 100.0 %
+18:07:55  CPU = 100.0 %
+18:08:00  CPU = 100.0 %
+18:08:05  CPU = 100.0 %
+18:08:10  CPU = 100.0 %
+18:08:14  CPU = 100.0 %
+18:08:19  CPU = 100.0 %
+PS C:\> Get-Job | Stop-Job; Get-Job | Remove-Job
+Get-WinEvent -LogName Application -MaxEvents 300 | Where-Object { $_.Message -match "ZelaBairro-Alertas|Processor Time" } | Select-Object -First 5 TimeCreated, Id, ProviderName, @{n='Mensagem';e={$_.Message.Substring(0,[Math]::Min(120,$_.Message.Length))}} | Format-Table -Wrap
+Get-WinEvent -LogName "Microsoft-Windows-Diagnosis-PLA/Operational" -MaxEvents 10 -ErrorAction SilentlyContinue | Format-Table TimeCreated, Id, Message -Wrap
+
+
+TimeCreated             Id Message
+-----------             -- -------
+11/17/2026 6:09:10 PM 2031 Performance counter \Processor(_Total)\% Processor Time has tripped its alert threshold. The
+                           counter value of 100.000000 is over the limit value of 85.000000. 85.000000 is the alert
+                           threshold value.
+11/17/2026 6:09:04 PM 2031 Performance counter \Processor(_Total)\% Processor Time has tripped its alert threshold. The
+                           counter value of 100.000000 is over the limit value of 85.000000. 85.000000 is the alert
+                           threshold value.
+11/17/2026 6:08:57 PM 2031 Performance counter \Processor(_Total)\% Processor Time has tripped its alert threshold. The
+                           counter value of 100.000000 is over the limit value of 85.000000. 85.000000 is the alert
+                           threshold value.
+11/17/2026 6:08:50 PM 2031 Performance counter \Processor(_Total)\% Processor Time has tripped its alert threshold. The
+                           counter value of 100.000000 is over the limit value of 85.000000. 85.000000 is the alert
+                           threshold value.
+11/17/2026 6:08:43 PM 2031 Performance counter \Processor(_Total)\% Processor Time has tripped its alert threshold. The
+                           counter value of 100.000000 is over the limit value of 85.000000. 85.000000 is the alert
+                           threshold value.
+11/17/2026 6:08:38 PM 2031 Performance counter \Processor(_Total)\% Processor Time has tripped its alert threshold. The
+                           counter value of 100.000000 is over the limit value of 85.000000. 85.000000 is the alert
+                           threshold value.
+11/17/2026 6:08:32 PM 2031 Performance counter \Processor(_Total)\% Processor Time has tripped its alert threshold. The
+                           counter value of 100.000000 is over the limit value of 85.000000. 85.000000 is the alert
+                           threshold value.
+11/17/2026 6:08:27 PM 2031 Performance counter \Processor(_Total)\% Processor Time has tripped its alert threshold. The
+                           counter value of 100.000000 is over the limit value of 85.000000. 85.000000 is the alert
+                           threshold value.
+11/17/2026 6:08:22 PM 2031 Performance counter \Processor(_Total)\% Processor Time has tripped its alert threshold. The
+                           counter value of 100.000000 is over the limit value of 85.000000. 85.000000 is the alert
+                           threshold value.
+11/17/2026 6:08:16 PM 2031 Performance counter \Processor(_Total)\% Processor Time has tripped its alert threshold. The
+                           counter value of 100.000000 is over the limit value of 85.000000. 85.000000 is the alert
+                           threshold value.
+
+
+PS C:\> cls
+PS C:\> sc.exe failure W3SVC reset= 86400 actions= restart/5000/restart/10000/restart/30000
+sc.exe failure WAS    reset= 86400 actions= restart/5000/restart/10000/restart/30000
+Set-Service W3SVC -StartupType Automatic
+Set-Service WAS   -StartupType Automatic
+sc.exe qfailure W3SVC
+sc.exe qfailure WAS
+$appcmd = "$env:windir\system32\inetsrv\appcmd.exe"
+& $appcmd list apppool "ZelaBairroPool" /text:* | Select-String -Pattern "^(name|startMode|autoStart|failure.rapidFail)"
+
+[SC] ChangeServiceConfig2 SUCCESS
+[SC] ChangeServiceConfig2 SUCCESS
+[SC] QueryServiceConfig2 SUCCESS
+
+SERVICE_NAME: W3SVC
+        RESET_PERIOD (in seconds)    : 86400
+        REBOOT_MESSAGE               :
+        COMMAND_LINE                 :
+        FAILURE_ACTIONS              : RESTART -- Delay = 5000 milliseconds.
+                                       RESTART -- Delay = 10000 milliseconds.
+                                       RESTART -- Delay = 30000 milliseconds.
+[SC] QueryServiceConfig2 SUCCESS
+
+SERVICE_NAME: WAS
+        RESET_PERIOD (in seconds)    : 86400
+        REBOOT_MESSAGE               :
+        COMMAND_LINE                 :
+        FAILURE_ACTIONS              : RESTART -- Delay = 5000 milliseconds.
+                                       RESTART -- Delay = 10000 milliseconds.
+                                       RESTART -- Delay = 30000 milliseconds.
+PS C:\> $appcmd = "$env:windir\system32\inetsrv\appcmd.exe"
+(Invoke-WebRequest http://app.zelabairro.local/ -UseBasicParsing).StatusCode
+& $appcmd list wp
+$old = [int](& $appcmd list wp /apppool.name:ZelaBairroPool /text:wp.name)
+"PID ANTES da falha: $old"
+
+200
+WP "5164" (applicationPool:ZelaBairroPool)
+PID ANTES da falha: 5164
+PS C:\> Stop-Process -Id $old -Force
+"Processo $old encerrado a forca em $(Get-Date -Format HH:mm:ss)"
+Start-Sleep 8
+& $appcmd list wp
+$new = [int](& $appcmd list wp /apppool.name:ZelaBairroPool /text:wp.name)
+"PID ANTIGO: $old   |   PID NOVO: $new"
+(Invoke-WebRequest http://app.zelabairro.local/ -UseBasicParsing).StatusCode
+
+Processo 5164 encerrado a forca em 20:10:49
+WP "6788" (applicationPool:ZelaBairroPool)
+PID ANTIGO: 5164   |   PID NOVO: 6788
+200
+PS C:\> Get-Service W3SVC, WAS | Format-Table Name, Status
+$svcpid = (Get-CimInstance Win32_Service -Filter "Name='W3SVC'").ProcessId
+"PID do servico W3SVC: $svcpid"
+taskkill /PID $svcpid /F
+Start-Sleep 3
+Get-Service W3SVC, WAS | Format-Table Name, Status
+Start-Sleep 20
+Get-Service W3SVC, WAS | Format-Table Name, Status
+(Invoke-WebRequest http://app.zelabairro.local/ -UseBasicParsing).StatusCode
+
+
+Name   Status
+----   ------
+W3SVC Running
+WAS   Running
+
+
+PID do servico W3SVC: 3216
+SUCCESS: The process with PID 3216 has been terminated.
+
+Name   Status
+----   ------
+W3SVC Stopped
+WAS   Stopped
+
+
+
+Name   Status
+----   ------
+W3SVC Running
+WAS   Running
+
+
+200
+PS C:\> Get-WinEvent -FilterHashtable @{LogName='System'; StartTime=(Get-Date).AddMinutes(-60); ProviderName='Microsoft-Windows-WAS','Service Control Manager'} -ErrorAction SilentlyContinue |
+  Select-Object TimeCreated, Id, ProviderName, @{n='Mensagem';e={($_.Message -split "`n")[0]}} | Format-Table -AutoSize -Wrap
+
+
+TimeCreated             Id ProviderName            Mensagem
+-----------             -- ------------            --------
+11/17/2026 8:40:57 PM 7036 Service Control Manager The Network Setup Service service entered the stopped state.
+11/17/2026 8:40:22 PM 7036 Service Control Manager The Windows Update service entered the stopped state.
+11/17/2026 8:39:33 PM 7036 Service Control Manager The Windows Camera Frame Server service entered the stopped state.
+11/17/2026 8:39:33 PM 7036 Service Control Manager The Windows Camera Frame Server Monitor service entered the stopped
+                                                   state.
+11/17/2026 8:39:03 PM 7036 Service Control Manager The Windows Camera Frame Server service entered the running state.
+11/17/2026 8:39:03 PM 7036 Service Control Manager The Windows Camera Frame Server Monitor service entered the running
+                                                   state.
+11/17/2026 8:37:58 PM 7036 Service Control Manager The AppX Deployment Service (AppXSVC) service entered the running state.
+11/17/2026 8:37:56 PM 7036 Service Control Manager The Network Setup Service service entered the running state.
+11/17/2026 8:36:27 PM 7036 Service Control Manager The Software Protection service entered the stopped state.
+11/17/2026 8:35:57 PM 7036 Service Control Manager The Software Protection service entered the running state.
+11/17/2026 8:33:51 PM 7036 Service Control Manager The Windows Camera Frame Server Monitor service entered the stopped
+                                                   state.
+11/17/2026 8:33:23 PM 7036 Service Control Manager The Windows Camera Frame Server Monitor service entered the running
+                                                   state.
+11/17/2026 8:31:23 PM 7036 Service Control Manager The WaaSMedicSvc service entered the stopped state.
+11/17/2026 8:30:50 PM 7036 Service Control Manager The Software Protection service entered the stopped state.
+11/17/2026 8:30:15 PM 7036 Service Control Manager The Software Protection service entered the running state.
+11/17/2026 8:27:14 PM 7036 Service Control Manager The WaaSMedicSvc service entered the running state.
+11/17/2026 8:26:56 PM 7036 Service Control Manager The Microsoft Account Sign-in Assistant service entered the stopped
+                                                   state.
+11/17/2026 8:25:23 PM 7036 Service Control Manager The Portable Device Enumerator Service service entered the stopped
+                                                   state.
+11/17/2026 8:24:24 PM 7036 Service Control Manager The WaaSMedicSvc service entered the stopped state.
+11/17/2026 8:23:24 PM 7036 Service Control Manager The Windows Update service entered the running state.
+11/17/2026 8:23:24 PM 7036 Service Control Manager The Delivery Optimization service entered the stopped state.
+11/17/2026 8:23:24 PM 7036 Service Control Manager The Delivery Optimization service entered the running state.
+11/17/2026 8:23:24 PM 7036 Service Control Manager The WaaSMedicSvc service entered the running state.
+11/17/2026 8:23:24 PM 7036 Service Control Manager The Portable Device Enumerator Service service entered the running
+                                                   state.
+11/17/2026 8:23:24 PM 7036 Service Control Manager The Network Connectivity Assistant service entered the stopped state.
+11/17/2026 8:22:11 PM 7036 Service Control Manager The World Wide Web Publishing Service service entered the running state.
+11/17/2026 8:22:11 PM 7036 Service Control Manager The Windows Process Activation Service service entered the running
+                                                   state.
+11/17/2026 8:22:11 PM 5211 Microsoft-Windows-WAS   The Windows Process Activation Service (WAS) started with 'Classic'
+                                                   mode using 'ConfigurationSystem'
+11/17/2026 8:22:06 PM 7031 Service Control Manager The Windows Process Activation Service service terminated unexpectedly.
+                                                    It has done this 1 time(s).  The following corrective action will be
+                                                   taken in 5000 milliseconds: Restart the service.
+11/17/2026 8:22:06 PM 7031 Service Control Manager The World Wide Web Publishing Service service terminated unexpectedly.
+                                                   It has done this 1 time(s).  The following corrective action will be
+                                                   taken in 5000 milliseconds: Restart the service.
+11/17/2026 8:20:59 PM 7036 Service Control Manager The Microsoft Account Sign-in Assistant service entered the running
+                                                   state.
+11/17/2026 8:10:49 PM 5009 Microsoft-Windows-WAS   A process serving application pool 'ZelaBairroPool' terminated
+                                                   unexpectedly. The process id was '5164'. The process exit code was
+                                                   '0xffffffff'.
+11/17/2026 8:08:16 PM 7040 Service Control Manager The start type of the Windows Process Activation Service service was
+                                                   changed from demand start to auto start.
+11/17/2026 8:06:44 PM 7036 Service Control Manager The Windows Camera Frame Server Monitor service entered the stopped
+                                                   state.
+11/17/2026 8:06:44 PM 7036 Service Control Manager The Windows Camera Frame Server service entered the stopped state.
+11/17/2026 8:06:21 PM 7036 Service Control Manager The Software Protection service entered the stopped state.
+11/17/2026 8:06:14 PM 7036 Service Control Manager The Windows Camera Frame Server Monitor service entered the running
+                                                   state.
+11/17/2026 8:06:14 PM 7036 Service Control Manager The Windows Camera Frame Server service entered the running state.
+11/17/2026 8:05:55 PM 7036 Service Control Manager The Software Protection service entered the running state.
+
+
+PS C:\> netsh http flush logbuffer
+Get-ChildItem C:\ZelaBairro\Logs -Recurse -Filter *.log | Sort-Object LastWriteTime -Descending | Select-Object -First 3 FullName, Length, LastWriteTime | Format-Table -AutoSize
+$log = Get-ChildItem C:\ZelaBairro\Logs -Recurse -Filter *.log | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+Get-Content $log.FullName -Tail 12
+
+Ok.
+
+FullName                                 Length LastWriteTime
+--------                                 ------ -------------
+C:\ZelaBairro\Logs\W3SVC2\u_ex261117.log   2214 11/17/2026 8:11:13 PM
+
+
+2026-11-17 19:50:48 192.168.56.10 GET /ocorrencias.json - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT;+Windows+NT+10.0;+en-US)+WindowsPowerShell/5.1.26100.7462 - 200 0 0 1
+2026-11-17 19:50:48 192.168.56.10 GET /health.txt - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT;+Windows+NT+10.0;+en-US)+WindowsPowerShell/5.1.26100.7462 - 200 0 0 2
+2026-11-17 19:52:05 192.168.56.10 GET / - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/157.0.0.0+Safari/537.36+Edg/157.0.0.0 - 200 0 0 53
+2026-11-17 19:52:05 192.168.56.10 GET /ocorrencias.json - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/157.0.0.0+Safari/537.36+Edg/157.0.0.0 http://app.zelabairro.local/ 200 0 0 11
+2026-11-17 19:52:05 192.168.56.10 GET /favicon.ico - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/157.0.0.0+Safari/537.36+Edg/157.0.0.0 http://app.zelabairro.local/ 404 0 2 8
+2026-11-17 19:52:15 192.168.56.10 GET / - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/157.0.0.0+Safari/537.36+Edg/157.0.0.0 - 304 0 0 4
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-11-17 23:10:32
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-11-17 23:10:32 192.168.56.10 GET / - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT;+Windows+NT+10.0;+en-US)+WindowsPowerShell/5.1.26100.7462 - 200 0 0 49
+2026-11-17 23:10:56 192.168.56.10 GET / - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT;+Windows+NT+10.0;+en-US)+WindowsPowerShell/5.1.26100.7462 - 200 0 0 12
+PS C:\> netsh http flush logbuffer
+Get-ChildItem C:\ZelaBairro\Logs -Recurse -Filter *.log | Sort-Object LastWriteTime -Descending | Select-Object -First 3 FullName, Length, LastWriteTime | Format-Table -AutoSize
+$log = Get-ChildItem C:\ZelaBairro\Logs -Recurse -Filter *.log | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+Get-Content $log.FullName -Tail 12
+
+Ok.
+
+FullName                                 Length LastWriteTime
+--------                                 ------ -------------
+C:\ZelaBairro\Logs\W3SVC2\u_ex261117.log   2214 11/17/2026 8:11:13 PM
+
+
+2026-11-17 19:50:48 192.168.56.10 GET /ocorrencias.json - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT;+Windows+NT+10.0;+en-US)+WindowsPowerShell/5.1.26100.7462 - 200 0 0 1
+2026-11-17 19:50:48 192.168.56.10 GET /health.txt - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT;+Windows+NT+10.0;+en-US)+WindowsPowerShell/5.1.26100.7462 - 200 0 0 2
+2026-11-17 19:52:05 192.168.56.10 GET / - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/157.0.0.0+Safari/537.36+Edg/157.0.0.0 - 200 0 0 53
+2026-11-17 19:52:05 192.168.56.10 GET /ocorrencias.json - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/157.0.0.0+Safari/537.36+Edg/157.0.0.0 http://app.zelabairro.local/ 200 0 0 11
+2026-11-17 19:52:05 192.168.56.10 GET /favicon.ico - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/157.0.0.0+Safari/537.36+Edg/157.0.0.0 http://app.zelabairro.local/ 404 0 2 8
+2026-11-17 19:52:15 192.168.56.10 GET / - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/157.0.0.0+Safari/537.36+Edg/157.0.0.0 - 304 0 0 4
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-11-17 23:10:32
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-11-17 23:10:32 192.168.56.10 GET / - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT;+Windows+NT+10.0;+en-US)+WindowsPowerShell/5.1.26100.7462 - 200 0 0 49
+2026-11-17 23:10:56 192.168.56.10 GET / - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT;+Windows+NT+10.0;+en-US)+WindowsPowerShell/5.1.26100.7462 - 200 0 0 12
+PS C:\> cls
+PS C:\> netsh http flush logbuffer
+Get-ChildItem C:\ZelaBairro\Logs -Recurse -Filter *.log | Sort-Object LastWriteTime -Descending | Select-Object -First 3 FullName, Length, LastWriteTime | Format-Table -AutoSize
+$log = Get-ChildItem C:\ZelaBairro\Logs -Recurse -Filter *.log | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+Get-Content $log.FullName -Tail 12
+
+Ok.
+
+FullName                                 Length LastWriteTime
+--------                                 ------ -------------
+C:\ZelaBairro\Logs\W3SVC2\u_ex261117.log   2214 11/17/2026 8:11:13 PM
+
+
+2026-11-17 19:50:48 192.168.56.10 GET /ocorrencias.json - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT;+Windows+NT+10.0;+en-US)+WindowsPowerShell/5.1.26100.7462 - 200 0 0 1
+2026-11-17 19:50:48 192.168.56.10 GET /health.txt - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT;+Windows+NT+10.0;+en-US)+WindowsPowerShell/5.1.26100.7462 - 200 0 0 2
+2026-11-17 19:52:05 192.168.56.10 GET / - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/157.0.0.0+Safari/537.36+Edg/157.0.0.0 - 200 0 0 53
+2026-11-17 19:52:05 192.168.56.10 GET /ocorrencias.json - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/157.0.0.0+Safari/537.36+Edg/157.0.0.0 http://app.zelabairro.local/ 200 0 0 11
+2026-11-17 19:52:05 192.168.56.10 GET /favicon.ico - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/157.0.0.0+Safari/537.36+Edg/157.0.0.0 http://app.zelabairro.local/ 404 0 2 8
+2026-11-17 19:52:15 192.168.56.10 GET / - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/157.0.0.0+Safari/537.36+Edg/157.0.0.0 - 304 0 0 4
+#Software: Microsoft Internet Information Services 10.0
+#Version: 1.0
+#Date: 2026-11-17 23:10:32
+#Fields: date time s-ip cs-method cs-uri-stem cs-uri-query s-port cs-username c-ip cs(User-Agent) cs(Referer) sc-status sc-substatus sc-win32-status time-taken
+2026-11-17 23:10:32 192.168.56.10 GET / - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT;+Windows+NT+10.0;+en-US)+WindowsPowerShell/5.1.26100.7462 - 200 0 0 49
+2026-11-17 23:10:56 192.168.56.10 GET / - 80 - 192.168.56.10 Mozilla/5.0+(Windows+NT;+Windows+NT+10.0;+en-US)+WindowsPowerShell/5.1.26100.7462 - 200 0 0 12
+PS C:\> cls
+PS C:\> Import-Module WebAdministration
+$http = (Invoke-WebRequest http://app.zelabairro.local/ -UseBasicParsing).StatusCode
+[pscustomobject]@{
+  Hostname      = $env:COMPUTERNAME
+  Dominio       = (Get-ADDomain).DNSRoot
+  DNS_app       = (Resolve-DnsName app.zelabairro.local -Type A).IPAddress
+  NTDS          = (Get-Service NTDS).Status
+  DNS_svc       = (Get-Service DNS).Status
+  W3SVC         = (Get-Service W3SVC).Status
+  WAS           = (Get-Service WAS).Status
+  Pool          = (Get-WebAppPoolState ZelaBairroPool).Value
+  Site          = (Get-WebsiteState ZelaBairro).Value
+  HTTP          = $http
+  Share         = (Get-SmbShare FotosZelaBairro).Name
+  Alerta        = ((logman query "ZelaBairro-Alertas" | Select-String "Status|Estado") -join " ").Trim()
+} | Format-List
+
+
+
+Hostname : SRV-ZELA01
+Dominio  : zelabairro.local
+DNS_app  : 192.168.56.10
+NTDS     : Running
+DNS_svc  : Running
+W3SVC    : Running
+WAS      : Running
+Pool     : Started
+Site     : Stopped
+HTTP     : 200
+Share    : FotosZelaBairro
+Alerta   : Status:               Running
+
+
+
+PS C:\> Stop-Transcript
+Get-ChildItem C:\ZelaBairro\Evidencias
+
+**********************
+Windows PowerShell transcript end
+End time: 20261117205853
+**********************
